@@ -1,0 +1,46 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Portfolio
+{% endblock %}
+
+{% block main %}
+    <div class="table-data">
+    <h2>Information for {{ username }}</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Current Price</th>
+                    <th>Symbol</th>
+                    <th>Shares owned</th>
+                    <th>Current Total Value</th>
+
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in symbols %}
+                <tr>
+                    <td>{{ symbols[loop.index0].name }}</td>
+                    <td>{{ symbols[loop.index0].price | usd }}</td>
+                    <td>{{ symbols[loop.index0].symbol }}</td>
+                    <td>{{ shares[loop.index0] }}</td>
+                    <td>{{ values[loop.index0] | usd }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <div class="table-data">
+        <table>
+            <tr>
+                <th>Current Balance:</td>
+                <th>Grand Total:</td>
+            </tr>
+            <tr>
+                <td>{{ balance | usd }}</td>
+                <td>{{ total | usd }}</td>
+            </tr>
+        </table>
+    </div>
+{% endblock %}

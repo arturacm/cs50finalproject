@@ -1,0 +1,3 @@
+[submodule "cs50finalproject"]
+	path = cs50finalproject
+	url = https://github.com/arturacm/cs50finalproject

@@ -1,0 +1,57 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Sold {{ result.symbol }}
+{% endblock %}
+
+<script type="text/javascript">
+	function update()
+	{
+		var select = document.getElementById('stock');
+		var option = select.options[select.selectedIndex];
+		document.getElementById('stock').value = option.text;
+	}
+	update();
+</script>
+
+{% block main %}
+    <form action="/sell" method="post">
+        <div class="form-group">
+            <label for="symbols"></label>
+            <select id="symbols" name="symbol" onchange="update()">
+                <option value="">Select a stock</option>
+                {% for row in portfolio %}
+                <option value="{{ row["symbol"] }}" id="stock">{{ portfolio[loop.index0]["symbol"] }}</option>
+                {% endfor %}
+            </select>
+            <input autocomplete="off" class="form-control" name="shares" type="number" placeholder="Quantity of stocks">
+        </div>
+        <button class="btn btn-primary" type="submit">Sell</button>
+    </form>
+    <div class="table-data">
+    <h2>Information from {{ result.name }} || {{ result.symbol }} for {{ username }}</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Price</th>
+                    <th>Symbol</th>
+                    <th>Shares sold</th>
+                    <th>Time bought</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>{{ result.name }}</td>
+                    <td>{{ result.price }}</td>
+                    <td>{{ result.symbol }}</td>
+                    <td>{{ shares }}</td>
+                    <td>{{ transactionTime }}</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    <p> Sold {{ shares }} share(s) for {{ result.price | usd }} each. </p>
+    <p> Total cost: {{ value | usd }} </p>
+    <p> CASH: {{ newbalance | usd }} </p>
+{% endblock %}

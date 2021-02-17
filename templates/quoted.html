@@ -1,0 +1,34 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    {{ result.symbol }}
+{% endblock %}
+
+{% block main %}
+    <form action="/quote" method="post">
+        <div class="form-group">
+            <input autocomplete="off" autofocus class="form-control" name="symbol" placeholder="Insert name code" type="text">
+        </div>
+        <button class="btn btn-primary" type="submit">Search</button>
+    </form>
+    <div class="table-data">
+    <h2>Information from {{ result.name }} || {{ result.symbol }}</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Price</th>
+                    <th>Symbol</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>{{ result.name }}</td>
+                    <td>{{ result.price | usd }}</td>
+                    <td>{{ result.symbol }}</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    Current Price: {{ result.price | usd }}
+{% endblock %}

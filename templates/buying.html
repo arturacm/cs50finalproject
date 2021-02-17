@@ -1,0 +1,41 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Buy {{ result.symbol }}
+{% endblock %}
+
+{% block main %}
+    <form action="/buy" method="post">
+        <div class="form-group">
+            <input autocomplete="off" autofocus class="form-control" name="symbol" placeholder="Insert name code" type="text">
+            <input autocomplete="off" class="form-control" name="shares" type="number" placeholder="Quantity of stocks">
+        </div>
+        <button class="btn btn-primary" type="submit">Buy Again</button>
+    </form>
+    <div class="table-data">
+    <h2>Information from {{ result.name }} || {{ result.symbol }} for {{ username }}</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Price</th>
+                    <th>Symbol</th>
+                    <th>Shares bought</th>
+                    <th>Time bought</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>{{ result.name }}</td>
+                    <td>{{ result.price | usd }}</td>
+                    <td>{{ result.symbol }}</td>
+                    <td>{{ shares }}</td>
+                    <td>{{ transactionTime }}</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    <p> Bought {{ shares }} share(s) for {{ result.price | usd }} each. </p>
+    <p> Total cost: {{ value | usd }} </p>
+    <p> CASH: {{ newbalance | usd }} </p>
+{% endblock %}
