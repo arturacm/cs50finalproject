@@ -22,6 +22,16 @@ nav .navbar-brand .green
     color: #2e944b;
 }
 
+nav .navbar-brand .purple
+{
+    color: #4d2e94;
+}
+
+nav .navbar-brand .cyan
+{
+    color: #2db3c5;
+}
+
 main .form-control
 {
     /* Center form controls */
