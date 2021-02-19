@@ -34,9 +34,9 @@ def login_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
-
+"""
 def lookup(symbol):
-    """Look up quote for symbol."""
+
 
     # Contact API
     try:
@@ -57,7 +57,7 @@ def lookup(symbol):
         }
     except (KeyError, TypeError, ValueError):
         return None
-
+"""
 
 def usd(value):
     """Format value as USD."""

@@ -10,7 +10,8 @@ from tempfile import mkdtemp
 from werkzeug.exceptions import default_exceptions, HTTPException, InternalServerError
 from werkzeug.security import check_password_hash, generate_password_hash
 
-from helpers import apology, login_required, lookup, usd
+#from helpers import apology, login_required, lookup, usd
+from helpers import apology, login_required, usd
 
 
 # Configure application
@@ -43,14 +44,16 @@ db = SQL("sqlite:///finance.db")
 
 
 # Make sure API key is set
+"""
 if not os.environ.get("API_KEY"):
    raise RuntimeError("API_KEY not set")
-
+"""
 
 @app.route("/")
 @login_required
 def index():
     """Show portfolio of stocks"""
+    """
     username = db.execute("SELECT username FROM users WHERE id = ?", session["user_id"])[0]["username"]
     balance = float(db.execute("SELECT cash FROM users WHERE id = ?", session["user_id"])[0]["cash"])
     count = db.execute("SELECT COUNT(DISTINCT symbol) FROM history WHERE username = ?", username)[0]["COUNT(DISTINCT symbol)"]
@@ -76,14 +79,16 @@ def index():
             valuesI = float(shares[i]) * float(symbolsI["price"])
             values.append(valuesI)
         total = balance + sum(values)
-
     return render_template("index.html", balance=balance, shares=shares, values=values, symbols=symbols, portfolio=portfolio, count=count, total=total, username=username)
+    """
+    return render_template("index.html")
 
 
 @app.route("/buy", methods=["GET", "POST"])
 @login_required
 def buy():
     """Buy shares of stock"""
+    """
     INTEGERS = []
     for i in range(999):
         index = float(i + 1)
@@ -120,17 +125,18 @@ def buy():
         return render_template("buying.html", result=result, username=username, value=value, transactionTime=transactionTime, shares=shares, newbalance=newbalance)
 
     return render_template("buy.html")
-
+"""
 
 @app.route("/history")
 @login_required
 def history():
     """Show history of transactions"""
+    """
     username = db.execute("SELECT username FROM users WHERE id = ?", session["user_id"])[0]["username"]
     history = db.execute("SELECT * FROM history WHERE username = ?", username)
 
     return render_template("history.html", history=history)
-
+"""
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
@@ -204,7 +210,10 @@ def logout():
 @app.route("/quote", methods=["GET", "POST"])
 @login_required
 def quote():
+
     """Get stock quote."""
+
+    """
     if request.method == "POST":
         symbol = request.form.get("symbol").upper()
         if not symbol:
@@ -215,6 +224,7 @@ def quote():
         return render_template("quoted.html", result=result, symbol=symbol)
 
     return render_template("quote.html")
+    """
 
 
 @app.route("/register", methods=["GET", "POST"])
@@ -248,6 +258,8 @@ def register():
 @login_required
 def sell():
     """Sell shares of stock"""
+
+    """
     username = db.execute("SELECT username FROM users WHERE id = ?", session["user_id"])[0]["username"]
     portfolio = db.execute("SELECT DISTINCT symbol FROM history WHERE username = ?", username)
     count = db.execute("SELECT COUNT(DISTINCT symbol) FROM history WHERE username = ?", username)[0]["COUNT(DISTINCT symbol)"]
@@ -284,7 +296,7 @@ def sell():
         return render_template("selling.html", symbols=symbols, username=username, value=value, transactionTime=transactionTime, shares=shares, result=result, portfolio=portfolio, newbalance=newbalance)
 
     return render_template("sell.html", portfolio=portfolio)
-
+"""
 
 def errorhandler(e):
     """Handle error"""

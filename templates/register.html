@@ -5,6 +5,11 @@
 {% endblock %}
 
 {% block main %}
+    <script>
+        function doctor()
+            document.getElementById("interaction").innerHTML = '<input class="form-control" name="speciality" placeholder="Speciality" type="Number">';
+
+    </script>
     <form action="/register" method="post">
         <div class="form-group">
             <input autocomplete="off" autofocus class="form-control" name="username" placeholder="Username" type="text">
@@ -15,6 +20,19 @@
         <div class="form-group">
             <input class="form-control" name="confirmation" placeholder="Type password again" type="password">
         </div>
+
+
+            <div class="form-group">
+
+            <select class="form-control" name="type" placeholder="Symbol" type="text">
+
+            <option disabled selected value =""  > Patient or Doctor </option>
+            <option value = "patient" > Patient</option>
+            <option onclick= "doctor()" = "Doctor" > Doctor</option>
+            <option name="interaction"></option>
+            </select>
+         </div>
+
         <button class="btn btn-primary" type="submit">Register</button>
     </form>
 
