@@ -6,8 +6,46 @@
 
 {% block main %}
     <script>
-        function doctor()
-            document.getElementById("interaction").innerHTML = '<input class="form-control" name="speciality" placeholder="Speciality" type="Number">';
+        function hide()
+            {
+                document.getElementById('patientWrapper').style.display = 'none';
+                document.getElementById('DoctorWrapper').style.display = 'none';
+            }
+            document.addEventListener('DOMContentLoaded',hide)
+            function changeEvent() {
+                var dropDown = document.getElementById("dropDown").value;
+
+                if(dropDown === "default"){
+                    document.getElementById('patientWrapper').style.display = 'none';
+                    document.getElementById('DoctorWrapper').style.display = 'none';
+                 } else {
+                   document.getElementById('patientWrapper').style.display = 'none';
+                    document.getElementById('DoctorWrapper').style.display = 'none';
+                    if(dropDown == 0){
+                       document.getElementById('patientWrapper').style.display = 'block';
+                    } else if(dropDown == 1){
+                       document.getElementById('DoctorWrapper').style.display = 'block';
+                    }
+                    }
+                 }
+
+
+        /*
+            function doctor()
+            {
+                let select = document.querySelector("type").value;
+                if (select == 1)
+                {
+                    document.getElementById("interaction").innerHTML = '<input class="form-control" name="speciality" placeholder="Speciality" type="Number">';
+                }
+
+                document.getElementById("interaction").innerHTML = '<input class="form-control" name="speciality" placeholder="Speciality" type="Number">';
+            }
+            function listen()
+            {
+                document.querySelector('select').addEventListener('type',doctor);
+            }
+            document.addEventListener('DOMContentLoaded',listen);*/
 
     </script>
     <form action="/register" method="post">
@@ -24,14 +62,42 @@
 
             <div class="form-group">
 
-            <select class="form-control" name="type" placeholder="Symbol" type="text">
+            <select class="form-control" id="dropDown" onchange="changeEvent()">
 
             <option disabled selected value =""  > Patient or Doctor </option>
-            <option value = "patient" > Patient</option>
-            <option onclick= "doctor()" = "Doctor" > Doctor</option>
-            <option name="interaction"></option>
+            <option value = "0" id="patient"> Patient</option>
+            <option value = "1" id="doctor" > Doctor</option>
             </select>
-         </div>
+        </div>
+        <div id="patientWrapper">
+            <div class="form-group">
+                <input autocomplete="off" name="name" placeholder="Name" type="text">
+            </div>
+            <div class="form-group">
+                <input autocomplete="off" name="birth" placeholder="Date of Birth" type="date">
+            </div>
+
+            <div class="form-group">
+                <input autocomplete="off" name="occupation" placeholder="Occupation" type="text">
+            </div>
+        </div>
+
+        <div id="DoctorWrapper">
+            <div class="form-group">
+                <input autocomplete="off" name="name" placeholder="Name" type="text">
+            </div>
+            <div class="form-group">
+                <input autocomplete="off" name="birth" placeholder="Date of Birth" type="date">
+            </div>
+
+            <div class="form-group">
+                <input autocomplete="off" name="speciality" placeholder="Speciality" type="text">
+            </div>
+
+
+
+        </div>
+
 
         <button class="btn btn-primary" type="submit">Register</button>
     </form>
