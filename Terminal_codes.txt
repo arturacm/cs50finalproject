@@ -1,5 +1,0 @@
-
-No terminal WSL: Ubuntu-20.04 do Linux, o código para começar o Virtual Environment do Flask é:
-    source venv/bin/activate
-    export FLASK_APP=application:app
-    flask run
