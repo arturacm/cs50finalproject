@@ -9,6 +9,7 @@ from flask_session import Session
 from tempfile import mkdtemp
 from werkzeug.exceptions import default_exceptions, HTTPException, InternalServerError
 from werkzeug.security import check_password_hash, generate_password_hash
+from datetime import datetime
 
 #from helpers import apology, login_required, lookup, usd
 from helpers import apology, login_required, usd
@@ -40,7 +41,7 @@ app.config["SESSION_TYPE"] = "filesystem"
 Session(app)
 
 # Configure CS50 Library to use SQLite database
-db = SQL("sqlite:///finance.db")
+db = SQL("sqlite:///database.db")
 
 
 # Make sure API key is set
@@ -173,6 +174,24 @@ def login():
     else:
         return render_template("login.html")
 
+
+@app.route("/appointment", methods=["GET", "POST"])
+@login_required
+def appointment():
+    if request.method == "POST":
+        date = request.form.get("schedule")
+        hour = request.form.get("appt")
+        specialization = request.form.get("specialization")
+        doctor = request.form.get("doctor")
+        log = request.form.get("log")
+        stringDate = date + " " + hour
+        stringDate = datetime.strptime(stringDate, "%Y-%m-%d %H:%M")
+        username = db.execute("SELECT username FROM users WHERE id = ?", session["user_id"])[0]["username"]
+        #TO-DO: If schedule is already booked, suggest other appointments.
+        db.execute("INSERT INTO appointments(username, doctor, type_appointment, TIME, log) VALUES (?, ?, ?, ?, ?)", username, doctor, specialization, stringDate, log)
+        return render_template("complete.html")
+    else:
+         return render_template("appointment.html")
 
 @app.route("/change", methods=["GET", "POST"])
 @login_required
