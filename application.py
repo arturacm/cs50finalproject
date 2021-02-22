@@ -189,7 +189,7 @@ def appointment():
         username = db.execute("SELECT username FROM users WHERE id = ?", session["user_id"])[0]["username"]
         #TO-DO: If schedule is already booked, suggest other appointments.
         db.execute("INSERT INTO appointments(username, doctor, type_appointment, TIME, log) VALUES (?, ?, ?, ?, ?)", username, doctor, specialization, stringDate, log)
-        return render_template("complete.html")
+        return render_template("appointment.html")
     else:
          return render_template("appointment.html")
 
