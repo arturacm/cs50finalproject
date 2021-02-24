@@ -259,17 +259,45 @@ def register():
                 return apology("There is already this username in our database")
         password = str(request.form.get("password"))
         passwordDuplicate = str(request.form.get("confirmation"))
+        role = request.form.get("role")
         if len(password) == 0 or len(passwordDuplicate) == 0:
             return apology("Your password is invalid.")
-        if password == passwordDuplicate:
-            hashed = str(generate_password_hash(request.form.get("password")))
-            db.execute("INSERT INTO users(username, hash) VALUES (?, ?)", username, hashed)
-            db.execute("CREATE TABLE IF NOT EXISTS history(id INTEGER PRIMARY KEY, username TEXT NOT NULL, shares INTEGER default 0, symbol TEXT NOT NULL, value REAL DEFAULT 0, time TIMESTAMP DEFAULT 0)")
-            return redirect("/")
+
         if password != passwordDuplicate:
             return apology("Your passwords do not match :(")
-        # TODO: Add the user's entry into the database
+
+
+        hashed = str(generate_password_hash(request.form.get("password")))
+        db.execute("INSERT INTO users(username, hash, role) VALUES (?, ?, ?)", username, hashed, role)
+
+        #Remember which user has logged in
+
+        rows = db.execute("SELECT * FROM users WHERE username = ?",username)
+        user_id = rows[0]["id"]
+
+        print(user_id)
+
+        #patient registration
+        if role == "patient":
+            name = request.form.get("pname")
+            birth = request.form.get("birth")
+            occupation = request.form.get("occupation")
+            db.execute("INSERT INTO patients(username, user_id, name, birth, occupation) VALUES (?, ?, ?, ?, ?)", username, user_id, name, birth, occupation)
+
+        #doctor registration
+        elif role == "doctor":
+            name = request.form.get("dname")
+            menumber = request.form.get("menumber")
+            speciality = request.form.get("speciality")
+            db.execute("INSERT INTO doctors(username, user_id, name, menumber, speciality) VALUES (?, ?, ?, ?, ?)", username, user_id, name, menumber, speciality)
+        else:
+            return apology("Something wrong is not right")
+
+        #remember the session
+        session["user_id"] = user_id
+
         return redirect("/")
+        # TODO: Add the user's entry into the database
     return render_template("register.html")
 
 

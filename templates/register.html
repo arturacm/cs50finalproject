@@ -21,9 +21,9 @@
                  } else {
                    document.getElementById('patientWrapper').style.display = 'none';
                     document.getElementById('DoctorWrapper').style.display = 'none';
-                    if(dropDown == 0){
+                    if(dropDown === "patient"){
                        document.getElementById('patientWrapper').style.display = 'block';
-                    } else if(dropDown == 1){
+                    } else if(dropDown === "doctor"){
                        document.getElementById('DoctorWrapper').style.display = 'block';
                     }
                     }
@@ -62,16 +62,16 @@
 
             <div class="form-group">
 
-            <select class="form-control" id="dropDown" onchange="changeEvent()">
+            <select class="form-control" id="dropDown" name="role" onchange="changeEvent()">
 
             <option disabled selected value =""  > Patient or Doctor </option>
-            <option value = "0" id="patient"> Patient</option>
-            <option value = "1" id="doctor" > Doctor</option>
+            <option value = "patient" id="patient"> Patient</option>
+            <option value = "doctor" id="doctor" > Doctor</option>
             </select>
         </div>
         <div id="patientWrapper">
             <div class="form-group">
-                <input autocomplete="off" name="name" placeholder="Name" type="text">
+                <input autocomplete="off" name="pname" placeholder="Name" type="text">
             </div>
             <div class="form-group">
                 <input autocomplete="off" name="birth" placeholder="Date of Birth" type="date">
@@ -84,10 +84,10 @@
 
         <div id="DoctorWrapper">
             <div class="form-group">
-                <input autocomplete="off" name="name" placeholder="Name" type="text">
+                <input autocomplete="off" name="dname" placeholder="Name" type="text">
             </div>
             <div class="form-group">
-                <input autocomplete="off" name="birth" placeholder="Date of Birth" type="date">
+                <input autocomplete="off" name="menumber" placeholder="M. E. Number" type="number">
             </div>
 
             <div class="form-group">
