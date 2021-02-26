@@ -250,16 +250,26 @@ def quote():
 def register():
     """Register user"""
     if request.method == "POST":
+        
         username = request.form.get("username")
-        if len(username) == 0:
-            return apology("It looks like you didn't insert a valid username.")
+        if not request.form.get("username"):
+                return apology("must provide a username", 400)
+
         testUsername = db.execute("SELECT username FROM users WHERE username = ?", username)
+
         if len(testUsername) > 0:
             if username == testUsername[0]["username"]:
                 return apology("There is already this username in our database")
+                
         password = str(request.form.get("password"))
         passwordDuplicate = str(request.form.get("confirmation"))
+
+
+        if not request.form.get("role"):
+                return apology("must provide a role", 400)
+
         role = request.form.get("role")
+        
         if len(password) == 0 or len(passwordDuplicate) == 0:
             return apology("Your password is invalid.")
 
@@ -275,10 +285,15 @@ def register():
         rows = db.execute("SELECT * FROM users WHERE username = ?",username)
         user_id = rows[0]["id"]
 
-        print(user_id)
-
         #patient registration
         if role == "patient":
+            if not request.form.get("pname"):
+                return apology("must provide a name", 400)
+            elif not request.form.get("birth"):
+                return apology("must provide birth day", 400)
+            elif not request.form.get("occupation"):
+                return apology("must provide occupation", 400)
+
             name = request.form.get("pname")
             birth = request.form.get("birth")
             occupation = request.form.get("occupation")
@@ -286,9 +301,17 @@ def register():
 
         #doctor registration
         elif role == "doctor":
+            if not request.form.get("dname"):
+                return apology("must provide a name", 400)
+            elif not request.form.get("menumber"):
+                return apology("must provide menumber", 400)
+            elif not request.form.get("speciality"):
+                return apology("must provide speciality", 400)
+
             name = request.form.get("dname")
             menumber = request.form.get("menumber")
             speciality = request.form.get("speciality")
+
             db.execute("INSERT INTO doctors(username, user_id, name, menumber, speciality) VALUES (?, ?, ?, ?, ?)", username, user_id, name, menumber, speciality)
         else:
             return apology("Something wrong is not right")
