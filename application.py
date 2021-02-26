@@ -1,15 +1,16 @@
 import os
 import time
 import numpy
-
+import requests
 
 from cs50 import SQL
-from flask import Flask, flash, redirect, render_template, request, session
+from flask import Flask, flash, redirect, render_template, request, session, render_template_string
 from flask_session import Session
 from tempfile import mkdtemp
 from werkzeug.exceptions import default_exceptions, HTTPException, InternalServerError
 from werkzeug.security import check_password_hash, generate_password_hash
 from datetime import datetime
+from geojson import Point, Feature
 
 #from helpers import apology, login_required, lookup, usd
 from helpers import apology, login_required, usd
@@ -229,6 +230,133 @@ def register():
         return redirect("/")
         # TODO: Add the user's entry into the database
     return render_template("register.html", specialty=SPECIALTY)
+
+#MAP SECTION OF CODE
+
+ROUTE = db.execute("SELECT latitude, longitude, name, speciality FROM doctors")
+
+# Mapbox driving direction API call
+ROUTE_URL = "https://api.mapbox.com/directions/v5/mapbox/driving/{0}.json?access_token={1}&overview=full&geometries=geojson"
+
+def create_route_url():
+    # Create a string with all the geo coordinates
+    lat_longs = ";".join(["{0},{1}".format(point["longitude"], point["latitude"]) for point in ROUTE])
+    # Create a url with the geo coordinates and access token
+    url = ROUTE_URL.format(lat_longs, 'pk.eyJ1IjoiZGF2aXBibCIsImEiOiJja2c5d2tncWIwMWZ3MnpxdTZ3YW00dnhjIn0.LSI8x6EqhOlp-sfnjCyqOw')
+    return url
+
+def get_route_data():
+    # Get the route url
+    route_url = create_route_url()
+    # Perform a GET request to the route API
+    result = requests.get(route_url)
+    # Convert the return value to JSON
+    data = result.json()
+
+    # Create a geo json object from the routing data
+    geometry = data["routes"][0]["geometry"]
+    route_data = Feature(geometry = geometry, properties = {})
+
+    return route_data
+
+def create_stop_locations_details():
+    stop_locations = []
+    for location in ROUTE:
+        # Create a geojson object for stop location
+        point = Point([location['longitude'], location['latitude']])
+        properties = {
+            'title': location['name'],
+            'icon': 'campsite',
+            'marker-color': '#3bb2d0',
+            'marker-symbol': len(stop_locations) + 1
+        }
+        feature = Feature(geometry = point, properties = properties)
+        stop_locations.append(feature)
+    return stop_locations
+
+
+@app.route('/find-doctors',methods=['GET','POST'])
+@login_required
+def my_maps():
+
+    mapbox_access_token = 'pk.eyJ1IjoiZGF2aXBibCIsImEiOiJja2c5d2tncWIwMWZ3MnpxdTZ3YW00dnhjIn0.LSI8x6EqhOlp-sfnjCyqOw'
+
+    route_data = get_route_data()
+    stop_locations = create_stop_locations_details()
+
+    return render_template('find_doctors.html', mapbox_access_token=mapbox_access_token, stop_locations = stop_locations, route_data=route_data)
+
+
+#END OF MAP SECTION
+
+#BEGINNING OF TEST SECTION FOR DEPENDENT SELECTION
+
+@app.route('/dependent', methods=['POST', 'GET'])
+def dependent():
+    cars = {'Chevrolet':['Volt','Malibu','Camry'],'Toyota':['Yaris','Corolla'],'KIA':['Cerato','Rio']}
+    # look for data from form POST (won't be present when we are invoked with GET initially)
+    selected_car = request.form['car_vendor'] if 'car_vendor' in request.form else None
+    if not selected_car or selected_car not in cars:
+        selected_car = None
+        selected_model = None
+    else:
+        selected_model = request.form['car_model'] if 'car_model' in request.form else None
+        # This is an alternative to unselecting the car model whenever a new car vendor is selected.
+        # Instead, we just check whether the selected model belongs to the selected car vendor or not:
+        if selected_model and selected_model not in cars[selected_car]:
+            selected_model = None
+    # Use a string template for demonstration purposes:
+    return render_template_string("""
+<!DOCTYPE html>
+<html>
+<head>
+<title>Flask Demo</title>
+<meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0, minimum-scale=1.0">
+</head>
+<body>
+<h2>Select Car</h2>
+<form name="f" method="post">
+  <table>
+    <tr>
+      <th>Make</th>
+    <th>Model</th>
+    </tr>
+    <tr>
+      <td>
+        <select name="car_vendor" id="car_vendor" onchange="document.f.submit();">
+{% if not selected_car %}
+          <option value=''>-- Select a Make --</option>
+{% endif %}
+{% for car in cars.keys() %}
+          <option value="{{ car }}" {% if car == selected_car %}selected="selected"{% endif %}>{{ car }}</option>
+{% endfor %}
+        </select>
+      </td>
+      <td>
+{% if selected_car %}
+        <select name="car_model" id="car_model" onchange="document.f.submit();">
+  {% if not selected_model %}
+          <option value=''>-- Select a Model --</option>
+  {% endif %}
+  {% for model in cars[selected_car] %}
+          <option value="{{ model }}" {% if model == selected_model %}selected="selected"{% endif %}>{{ model }}</option>
+  {% endfor %}
+        </select>
+{% endif %}
+      </td>
+    </tr>
+  </table>
+</form>
+
+{% if selected_car and selected_model %}
+<p style="color: red;">Both make and model have been selected: {{ selected_car }} and {{ selected_model }}.</p>
+{% endif %}
+</body>
+</html>
+""", cars=cars, selected_car=selected_car, selected_model=selected_model)
+
+
+#END OF DEPENDENT SELECTION
 
 def errorhandler(e):
     """Handle error"""

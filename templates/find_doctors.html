@@ -1,0 +1,128 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Find Doctors
+{% endblock %}
+
+{% block main %}
+<div class="container">
+		
+    <input class="inputBox" type="number" id="Longitude" placeholder="Enter Longitude" />
+    <input class="inputBox" type="number" id="Latitude" placeholder="Enter Latitude" />
+    <p></p>
+    <button class="button" onclick="getLonLat()"> Submit</button>
+    <div id='map' style='width: 100%; height:500px;'></div><br/><br/>
+    
+</div>
+
+<script>
+    var longitude, latitude;
+    function getLonLat(){
+        longitude = document.getElementById("Longitude").value;
+        latitude = document.getElementById("Latitude").value;
+        display_map(longitude, latitude);
+    }
+    function display_map(longitude=-38.55, latitude=-3.80) {
+        mapboxgl.accessToken = "{{ mapbox_access_token }}"
+        var map = new mapboxgl.Map({
+        container: 'map',
+        style: 'mapbox://styles/mapbox/satellite-streets-v10',
+        center: [longitude,latitude],
+        zoom: 8,
+        bearing: -17.6,
+        pitch:45
+    
+        });
+        // fulscreen button 
+        map.addControl(new mapboxgl.FullscreenControl());
+        // display a blue marker
+        var marker = new mapboxgl.Marker()
+              .setLngLat([longitude,latitude])
+              .addTo(map);
+          // Navigation marker at top-left corner
+          var nav = new mapboxgl.NavigationControl();
+              map.addControl(nav, 'top-left');
+          // change false to true, to get your location. Then, enable location in the browser.
+          map.addControl(new mapboxgl.GeolocateControl({
+                positionOptions: {
+                    enableHighAccuracy: false
+                },
+            trackUserLocation: true
+        }));
+          // The 'building' layer in the mapbox-streets vector source contains building-height
+        // data from OpenStreetMap.
+        route = {{route_data|safe}}
+        map.on('load', function() {
+            
+            map.addSource("route", {
+            "type": "geojson",
+            "data": route
+            });
+
+            // Insert the layer beneath any symbol layer.
+            var layers = map.getStyle().layers;
+            var labelLayerId;
+            for (var i = 0; i < layers.length; i++) {
+                if (layers[i].type === 'symbol' && layers[i].layout['text-field']) {
+                    labelLayerId = layers[i].id;
+                    break;
+                }
+            }
+            map.addLayer({
+                'id': '3d-buildings',
+                'source': 'composite',
+                'source-layer': 'building',
+                'filter': ['==', 'extrude', 'true'],
+                'type': 'fill-extrusion',
+                'minzoom': 15,
+                'paint': {
+                    'fill-extrusion-color': '#aaa',
+                    // use an 'interpolate' expression to add a smooth transition effect to the
+                    // buildings as the user zooms in
+                    'fill-extrusion-height': [
+                        "interpolate", ["linear"], ["zoom"],
+                        15, 0,
+                        15.05, ["get", "height"]
+                    ],
+                    'fill-extrusion-base': [
+                        "interpolate", ["linear"], ["zoom"],
+                        15, 0,
+                        15.05, ["get", "min_height"]
+                    ],
+                    'fill-extrusion-opacity': .6
+                }
+            }, labelLayerId);
+
+            map.addLayer({
+                "id": "route",
+                "type": "line",
+                "source": "route",
+                "layout": {
+                    "line-join": "round",
+                    "line-cap": "round"
+                },
+                "paint": {
+                    "line-color": "#007cbf",
+                    "line-width": 2
+                }
+            });
+
+             // Add this to end of function
+            var stop_locations = {{ stop_locations|safe }}
+            stop_locations.forEach(function(marker) {
+                var el = document.createElement('div');
+                el.className = 'marker';
+                el.style.left = '-15px';
+                el.style.top = '-32px';
+
+                new mapboxgl.Marker(el)
+                    .setLngLat(marker.geometry.coordinates)
+                    .addTo(map);
+            });
+        });
+    }
+    display_map();
+    document.querySelector("#map > div.mapboxgl-canvas-container.mapboxgl-interactive.mapboxgl-touch-drag-pan.mapboxgl-touch-zoom-rotate > canvas").style.position = "relative";
+    
+</script>
+{% endblock %}
