@@ -45,7 +45,7 @@ Session(app)
 db = SQL("sqlite:///database.db")
 
 # Setting accepted Doctors' Specialties
-SPECIALTY = {"Physician", "Pediatrician", "Geriatric medicine", "Allergist", "Dermatologist", "Infectologist", "Ophtalmologist", "Obstetrician", "Gynecologist", "Cardiologist"}
+SPECIALTY = {"Physician", "Pediatrician", "Geriatric medicine", "Allergist", "Dermatologist", "Infectologist", "Ophtalmologist", "Obstetrician", "Gynecologist", "Cardiologist"} 
 
 # Make sure API key is set
 """
@@ -57,7 +57,7 @@ if not os.environ.get("API_KEY"):
 @login_required
 def index():
     role = db.execute("SELECT * FROM users WHERE id = ?", session["user_id"])[0]["role"]
-
+    
     if (role == "patient"):
         patientDb = db.execute("SELECT * FROM patients WHERE user_id = ?", session["user_id"])[0]
         appointments = db.execute("SELECT * FROM appointments JOIN doctors ON doctors.id = appointments.doctor_id WHERE patient_id = ? AND TIME >= datetime('now') ORDER BY TIME DESC", patientDb["id"])
@@ -71,7 +71,7 @@ def index():
 @login_required
 def history():
     role = db.execute("SELECT * FROM users WHERE id = ?", session["user_id"])[0]["role"]
-
+    
     if (role == "patient"):
         patientDb = db.execute("SELECT * FROM patients WHERE user_id = ?", session["user_id"])[0]
         appointments = db.execute("SELECT * FROM appointments JOIN doctors ON doctors.id = appointments.doctor_id WHERE patient_id = ? AND TIME < datetime('now') ORDER BY TIME DESC", patientDb["id"])
@@ -130,10 +130,10 @@ def appointment():
         patientLog = request.form.get("log")
         stringDate = date + " " + hour
         #TO-DO: If schedule is already booked, suggest other appointments.
-        checkVacancy = db.execute("SELECT TIME FROM appointments WHERE doctor_id = ?", doctor)
-        for row in checkVacancy["TIME"]:
-            if (stringDate - row > -1 or stringDate - row < 1):
-                print(stringDate - row)
+        #checkVacancy = db.execute("SELECT TIME FROM appointments WHERE doctor_id = ?", doctor)
+        #for row in checkVacancy["TIME"]:
+        #    if (stringDate - row > -1 or stringDate - row < 1):
+        #        print(stringDate - row)
         stringDate = datetime.strptime(stringDate, "%Y-%m-%d %H:%M")
 
         db.execute("INSERT INTO appointments(patient_id, doctor_id, type_appointment, TIME, patient_log) VALUES (?, ?, ?, ?, ?)", patientDb["id"], doctor, specialization, stringDate, patientLog)
@@ -173,7 +173,6 @@ def logout():
 
     # Redirect user to login form
     return redirect("/")
-
 
 @app.route("/register", methods=["GET", "POST"])
 def register():
@@ -325,7 +324,19 @@ def my_maps():
 
 @app.route('/dependent', methods=['POST', 'GET'])
 def dependent():
-    cars = {'Chevrolet':['Volt','Malibu','Camry'],'Toyota':['Yaris','Corolla'],'KIA':['Cerato','Rio']}
+    #cars = {'Chevrolet':['Volt','Malibu','Camry'],'Toyota':['Yaris','Corolla'],'KIA':['Cerato','Rio']}
+    cars = {}
+    for rowSpecialty in SPECIALTY:
+        testName = db.execute("SELECT name FROM doctors WHERE speciality = ?", rowSpecialty)
+        count = db.execute("SELECT COUNT(name) FROM doctors WHERE speciality = ?", rowSpecialty)[0]["COUNT(name)"]
+        if count != 0:
+            names = [count, ""]
+            for i in range(count):
+                names[i] = testName[i]["name"]
+        else:
+            names = []
+            
+        cars.update({rowSpecialty : names})
     # look for data from form POST (won't be present when we are invoked with GET initially)
     selected_car = request.form['car_vendor'] if 'car_vendor' in request.form else None
     if not selected_car or selected_car not in cars:
