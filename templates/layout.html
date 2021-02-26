@@ -21,6 +21,47 @@
 
         <title>HEALTH Project: {% block title %}{% endblock %}</title>
 
+        {% if mapbox_access_token %}
+
+        <script src='https://api.mapbox.com/mapbox-gl-js/v0.46.0/mapbox-gl.js'></script>
+        <link href='https://api.mapbox.com/mapbox-gl-js/v0.46.0/mapbox-gl.css' rel='stylesheet' />
+        <style>
+            .container !important {
+                max-width: 70%;
+                max-height: 50%;
+                margin-left: auto;
+                margin-right: auto;
+            }
+            .inputBox {
+                width: 50%;
+                padding: 12px 20px;
+                margin: 8px 0;
+                box-sizing: border-box;
+            }
+            .button {
+                background-color: #4CAF50;
+                border: none;
+                color: white;
+                padding: 15px 32px;
+                text-align: center;
+                text-decoration: none;
+                display: inline-block;
+                font-size: 16px;
+                margin: 4px 2px;
+                cursor: pointer;
+            }
+            .marker {
+                border: none;
+                cursor: pointer;
+                height: 32px;
+                width: 32px;
+                background-image: url(static/marker.png);
+                background-color: rgba(0, 0, 0, 0);
+                transform: translate(28px, 56px, 0);
+            }
+
+        </style>
+        {% endif %}
     </head>
 
     <body>
@@ -35,6 +76,8 @@
                     <ul class="navbar-nav mr-auto mt-2">
                         <li class="nav-item"><a class="nav-link" href="/appointment">Appointment</a></li>
                         <li class="nav-item"><a class="nav-link" href="/history">History</a></li>
+                        <li class="nav-item"><a class="nav-link" href="/find-doctors">Find Doctors</a></li>
+                        <li class="nav-item"><a class="nav-link" href="/dependent">Test</a></li>
                     </ul>
                     <ul class="navbar-nav ml-auto mt-2">
                         <li class="nav-item"><a class="nav-link" href="/change">Change Password</a></li>

@@ -12,22 +12,24 @@
                 document.getElementById('DoctorWrapper').style.display = 'none';
             }
             document.addEventListener('DOMContentLoaded',hide)
-            function changeEvent() {
-                var dropDown = document.getElementById("dropDown").value;
+        function changeEvent() {
+            var dropDown = document.getElementById("dropDown").value;
 
-                if(dropDown === "default"){
-                    document.getElementById('patientWrapper').style.display = 'none';
-                    document.getElementById('DoctorWrapper').style.display = 'none';
-                 } else {
-                   document.getElementById('patientWrapper').style.display = 'none';
-                    document.getElementById('DoctorWrapper').style.display = 'none';
-                    if(dropDown === "patient"){
-                       document.getElementById('patientWrapper').style.display = 'block';
-                    } else if(dropDown === "doctor"){
-                       document.getElementById('DoctorWrapper').style.display = 'block';
-                    }
-                    }
-                 }
+            if(dropDown === "default"){
+                document.getElementById('patientWrapper').style.display = 'none';
+                document.getElementById('DoctorWrapper').style.display = 'none';
+                } 
+            else {
+                document.getElementById('patientWrapper').style.display = 'none';
+                document.getElementById('DoctorWrapper').style.display = 'none';
+                if(dropDown === "patient"){
+                    document.getElementById('patientWrapper').style.display = 'block';
+                } 
+                else if(dropDown === "doctor"){
+                    document.getElementById('DoctorWrapper').style.display = 'block';
+                }
+            }
+        }
 
 
         /*
@@ -48,6 +50,17 @@
             document.addEventListener('DOMContentLoaded',listen);*/
 
     </script>
+
+    <script type="text/javascript">
+        function update()
+        {
+            var select = document.getElementById('selected');
+            var option = select.options[select.selectedIndex];
+            document.getElementById('selected').value = option.text;
+        }
+        update();
+    </script>
+
     <form action="/register" method="post">
         <div class="form-group">
             <input autocomplete="off" autofocus class="form-control" name="username" placeholder="Username" type="text">
@@ -91,7 +104,13 @@
             </div>
 
             <div class="form-group">
-                <input autocomplete="off" name="speciality" placeholder="Speciality" type="text">
+                <label for="specialties">Choose a specialty:</label>
+                <select id="specialties" name="specialty" onchange="update()">
+                    <option disabled selected value="" >Select a specialty</option>
+                    {% for row in specialty %}
+                        <option value="{{ row }}" id="selected">{{ row }}</option>
+                    {% endfor %}
+                </select>
             </div>
 
 

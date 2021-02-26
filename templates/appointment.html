@@ -5,6 +5,20 @@
 {% endblock %}
 
 {% block main %}
+
+<script type="text/javascript">
+    function update()
+    {
+        var select = document.getElementById('selected');
+        var option = select.options[select.selectedIndex];
+        document.getElementById('selected').value = option.text;
+        var selectDoctor = document.getElementById('selected-doctor');
+        var optionDoctor = selectDoctor.options[selectDoctor.selectedIndex];
+        document.getElementById('selected-doctor').value = optionDoctor.text;
+    }
+    update();
+</script>
+<h2>{{ message }}</h2>
 <form action="/appointment" method="post">
     <div class="form-group">
         <label for="schedule">Select a day</label>
@@ -13,22 +27,30 @@
 
     <div class="form-group">
         <label for="appt">Choose a time for your meeting:</label>
-        <input type="time" id="appt" name="appt" min="09:00" max="18:00" required>
+        <input type="time" id="appt" name="appt" min="00:00" max="23:59" required>
     </div>
 
     <div class="form-group">
-        <select class="form-control" name="specialization" placeholder="Specialization" type="text">
-        <option disabled selected value ="">Select a type of appointment:</option>
-        <option value = "generalist">Generalist</option>
-        <option value="heart">Heart</option>
+        <label for="specialties">Choose a specialty:</label>
+        <select id="specialties" name="specialty" onchange="update()">
+            <option disabled selected value="" >Select a specialty</option>
+            {% for row in specialty %}
+                <option value="{{ row }}" id="selected">{{ row }}</option>
+            {% endfor %}
         </select>
     </div>
 
+    {{ selectedSpecialty }}
+
     <div class="form-group">
-        <select class="form-control" name="doctor" placeholder="Doctor" type="text">
-        <option disabled selected value ="">Select a doctor:</option>
-        <option value = "doctorA">doctorA</option>
-        <option value="doctorB">doctorB</option>
+        <label for="doctor-name">Choose a doctor:</label>
+        <select class="form-control" name="doctor" onchange="update()">
+            <option disabled selected value ="">Select a doctor</option>
+            {% for row in doctorDb %}
+                {% if row.specialty == selectedSpecialty %}
+                <option value = "{{ row.id }}" id="selected-doctor">{{ row.name }}</option>
+                {% endif %}
+            {% endfor %}
         </select>
     </div>
 

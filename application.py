@@ -1,15 +1,16 @@
 import os
 import time
 import numpy
-
+import requests
 
 from cs50 import SQL
-from flask import Flask, flash, redirect, render_template, request, session
+from flask import Flask, flash, redirect, render_template, request, session, render_template_string
 from flask_session import Session
 from tempfile import mkdtemp
 from werkzeug.exceptions import default_exceptions, HTTPException, InternalServerError
 from werkzeug.security import check_password_hash, generate_password_hash
 from datetime import datetime
+from geojson import Point, Feature
 
 #from helpers import apology, login_required, lookup, usd
 from helpers import apology, login_required, usd
@@ -43,6 +44,8 @@ Session(app)
 # Configure CS50 Library to use SQLite database
 db = SQL("sqlite:///database.db")
 
+# Setting accepted Doctors' Specialties
+SPECIALTY = {"Physician", "Pediatrician", "Geriatric medicine", "Allergist", "Dermatologist", "Infectologist", "Ophtalmologist", "Obstetrician", "Gynecologist", "Cardiologist"}
 
 # Make sure API key is set
 """
@@ -53,91 +56,30 @@ if not os.environ.get("API_KEY"):
 @app.route("/")
 @login_required
 def index():
-    """Show portfolio of stocks"""
-    """
-    username = db.execute("SELECT username FROM users WHERE id = ?", session["user_id"])[0]["username"]
-    balance = float(db.execute("SELECT cash FROM users WHERE id = ?", session["user_id"])[0]["cash"])
-    count = db.execute("SELECT COUNT(DISTINCT symbol) FROM history WHERE username = ?", username)[0]["COUNT(DISTINCT symbol)"]
-    if count == 0:
-        shares = ""
-        values = ""
-        portfolio = ""
-        symbols = ""
-        total = balance
-    else:
-        symbols = []
-        shares = []
-        values = []
-        portfolio = []
-        for i in range(count):
-            portfolioI = db.execute("SELECT DISTINCT symbol FROM history WHERE username=?", username)[i]["symbol"]
-            portfolio.append(portfolioI)
-            symbolsI = lookup(portfolio[i])
-            symbols.append(symbolsI)
-            sharesI = db.execute("SELECT SUM(shares) FROM history WHERE username=? AND symbol=?",
-                                 username, portfolio[i])[0]["SUM(shares)"]
-            shares.append(sharesI)
-            valuesI = float(shares[i]) * float(symbolsI["price"])
-            values.append(valuesI)
-        total = balance + sum(values)
-    return render_template("index.html", balance=balance, shares=shares, values=values, symbols=symbols, portfolio=portfolio, count=count, total=total, username=username)
-    """
-    return render_template("index.html")
+    role = db.execute("SELECT * FROM users WHERE id = ?", session["user_id"])[0]["role"]
 
+    if (role == "patient"):
+        patientDb = db.execute("SELECT * FROM patients WHERE user_id = ?", session["user_id"])[0]
+        appointments = db.execute("SELECT * FROM appointments JOIN doctors ON doctors.id = appointments.doctor_id WHERE patient_id = ? AND TIME >= datetime('now') ORDER BY TIME DESC", patientDb["id"])
+    elif (role == "doctor"):
+        doctorDb = db.execute("SELECT * FROM doctors WHERE user_id = ?", session["user_id"])[0]
+        appointments = db.execute("SELECT * FROM appointments LEFT JOIN doctors ON appointments.doctor_id = doctors.id LEFT JOIN patients ON appointments.patient_id = patients.id WHERE doctor_id = ? AND TIME >= datetime('now') ORDER BY TIME DESC", doctorDb["id"])
+    return render_template("index.html", role=role, appointments=appointments)
 
-@app.route("/buy", methods=["GET", "POST"])
-@login_required
-def buy():
-    """Buy shares of stock"""
-    """
-    INTEGERS = []
-    for i in range(999):
-        index = float(i + 1)
-        INTEGERS.append(index)
-    if request.method == "POST":
-        symbol = request.form.get("symbol")
-        if symbol == "":
-            return apology("It looks like you didn't insert a symbol. Please insert one.")
-        shares = request.form.get("shares")
-        if not shares.isnumeric():
-            return apology("Please insert a number.")
-        shares = float(shares)
-        if shares not in INTEGERS or shares < 0 or not shares:
-            return apology("Please insert a positive integer number.")
-        shares = int(shares)
-        result = lookup(symbol)
-        if not result:
-            return apology("There is currently no match for this quote!")
-        balance = db.execute("SELECT cash FROM users WHERE id = ?", session["user_id"])
-        balance = balance[0]["cash"]
-        value = float(shares * result["price"])
-        if balance < value:
-            return apology("It looks like you do not have enough funds for this transaction")
-        username = db.execute("SELECT username FROM users WHERE id = ?", session["user_id"])
-        username = username[0]["username"]
-        transactionTime = time.strftime('%A %B, %d %Y %H:%M:%S')
-        db.execute("INSERT INTO history(username, shares, symbol, value, time) VALUES (?, ?, ?, ?, ?)",
-                   username, shares, symbol, value, transactionTime)
-        historyId = db.execute("SELECT id FROM history WHERE username = ? AND time = ?", username, transactionTime)
-        historyId = historyId[0]["id"]
-        newbalance = balance - value
-        db.execute("UPDATE history SET shares = ? WHERE id = ?", shares, historyId)
-        db.execute("UPDATE users SET cash = ? WHERE id = ?", newbalance, session["user_id"])
-        return render_template("buying.html", result=result, username=username, value=value, transactionTime=transactionTime, shares=shares, newbalance=newbalance)
-
-    return render_template("buy.html")
-"""
 
 @app.route("/history")
 @login_required
 def history():
-    """Show history of transactions"""
-    """
-    username = db.execute("SELECT username FROM users WHERE id = ?", session["user_id"])[0]["username"]
-    history = db.execute("SELECT * FROM history WHERE username = ?", username)
+    role = db.execute("SELECT * FROM users WHERE id = ?", session["user_id"])[0]["role"]
 
-    return render_template("history.html", history=history)
-"""
+    if (role == "patient"):
+        patientDb = db.execute("SELECT * FROM patients WHERE user_id = ?", session["user_id"])[0]
+        appointments = db.execute("SELECT * FROM appointments JOIN doctors ON doctors.id = appointments.doctor_id WHERE patient_id = ? AND TIME < datetime('now') ORDER BY TIME DESC", patientDb["id"])
+    elif (role == "doctor"):
+        doctorDb = db.execute("SELECT * FROM doctors WHERE user_id = ?", session["user_id"])[0]
+        appointments = db.execute("SELECT * FROM appointments LEFT JOIN doctors ON appointments.doctor_id = doctors.id LEFT JOIN patients ON appointments.patient_id = patients.id WHERE doctor_id = ? AND TIME < datetime('now') ORDER BY TIME DESC", doctorDb["id"])
+    return render_template("history.html", role=role, appointments=appointments)
+
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
@@ -178,20 +120,27 @@ def login():
 @app.route("/appointment", methods=["GET", "POST"])
 @login_required
 def appointment():
+    doctorDb = db.execute("SELECT id, name, speciality FROM doctors")
+    patientDb = db.execute("SELECT id, user_id, name, occupation FROM patients WHERE user_id = ?", session["user_id"])[0]
     if request.method == "POST":
         date = request.form.get("schedule")
         hour = request.form.get("appt")
-        specialization = request.form.get("specialization")
+        specialization = request.form.get("specialty")
         doctor = request.form.get("doctor")
-        log = request.form.get("log")
+        patientLog = request.form.get("log")
         stringDate = date + " " + hour
-        stringDate = datetime.strptime(stringDate, "%Y-%m-%d %H:%M")
-        username = db.execute("SELECT username FROM users WHERE id = ?", session["user_id"])[0]["username"]
         #TO-DO: If schedule is already booked, suggest other appointments.
-        db.execute("INSERT INTO appointments(username, doctor, type_appointment, TIME, log) VALUES (?, ?, ?, ?, ?)", username, doctor, specialization, stringDate, log)
-        return render_template("appointment.html")
+        checkVacancy = db.execute("SELECT TIME FROM appointments WHERE doctor_id = ?", doctor)
+        for row in checkVacancy["TIME"]:
+            if (stringDate - row > -1 or stringDate - row < 1):
+                print(stringDate - row)
+        stringDate = datetime.strptime(stringDate, "%Y-%m-%d %H:%M")
+
+        db.execute("INSERT INTO appointments(patient_id, doctor_id, type_appointment, TIME, patient_log) VALUES (?, ?, ?, ?, ?)", patientDb["id"], doctor, specialization, stringDate, patientLog)
+        message="Appointment successfully scheduled"
+        return render_template("appointment.html", message=message)
     else:
-         return render_template("appointment.html")
+         return render_template("appointment.html", specialty=SPECIALTY, doctorDb=doctorDb)
 
 @app.route("/change", methods=["GET", "POST"])
 @login_required
@@ -226,66 +175,38 @@ def logout():
     return redirect("/")
 
 
-@app.route("/quote", methods=["GET", "POST"])
-@login_required
-def quote():
-
-    """Get stock quote."""
-
-    """
-    if request.method == "POST":
-        symbol = request.form.get("symbol").upper()
-        if not symbol:
-            return apology("It looks like you didn't insert a quote. Please insert one.")
-        result = lookup(symbol)
-        if not result:
-            return apology("There is currently no match for this quote!")
-        return render_template("quoted.html", result=result, symbol=symbol)
-
-    return render_template("quote.html")
-    """
-
-
 @app.route("/register", methods=["GET", "POST"])
 def register():
     """Register user"""
     if request.method == "POST":
-        
-        username = request.form.get("username")
+
+        #Error Checking
         if not request.form.get("username"):
                 return apology("must provide a username", 400)
 
+        #Remember which user has logged in
+        username = request.form.get("username")
         testUsername = db.execute("SELECT username FROM users WHERE username = ?", username)
+
+        password = str(request.form.get("password"))
+        passwordDuplicate = str(request.form.get("confirmation"))
 
         if len(testUsername) > 0:
             if username == testUsername[0]["username"]:
                 return apology("There is already this username in our database")
-                
-        password = str(request.form.get("password"))
-        passwordDuplicate = str(request.form.get("confirmation"))
-
 
         if not request.form.get("role"):
                 return apology("must provide a role", 400)
 
-        role = request.form.get("role")
-        
         if len(password) == 0 or len(passwordDuplicate) == 0:
             return apology("Your password is invalid.")
 
         if password != passwordDuplicate:
             return apology("Your passwords do not match :(")
 
+        role = request.form.get("role")
 
-        hashed = str(generate_password_hash(request.form.get("password")))
-        db.execute("INSERT INTO users(username, hash, role) VALUES (?, ?, ?)", username, hashed, role)
-
-        #Remember which user has logged in
-
-        rows = db.execute("SELECT * FROM users WHERE username = ?",username)
-        user_id = rows[0]["id"]
-
-        #patient registration
+        #patient error checking
         if role == "patient":
             if not request.form.get("pname"):
                 return apology("must provide a name", 400)
@@ -294,79 +215,180 @@ def register():
             elif not request.form.get("occupation"):
                 return apology("must provide occupation", 400)
 
-            name = request.form.get("pname")
-            birth = request.form.get("birth")
-            occupation = request.form.get("occupation")
-            db.execute("INSERT INTO patients(username, user_id, name, birth, occupation) VALUES (?, ?, ?, ?, ?)", username, user_id, name, birth, occupation)
-
-        #doctor registration
+        #doctor error checking
         elif role == "doctor":
             if not request.form.get("dname"):
                 return apology("must provide a name", 400)
             elif not request.form.get("menumber"):
                 return apology("must provide menumber", 400)
-            elif not request.form.get("speciality"):
+            elif not request.form.get("specialty"):
                 return apology("must provide speciality", 400)
 
-            name = request.form.get("dname")
-            menumber = request.form.get("menumber")
-            speciality = request.form.get("speciality")
-
-            db.execute("INSERT INTO doctors(username, user_id, name, menumber, speciality) VALUES (?, ?, ?, ?, ?)", username, user_id, name, menumber, speciality)
         else:
             return apology("Something wrong is not right")
+
+
+        hashed = str(generate_password_hash(request.form.get("password")))
+
+        db.execute("INSERT INTO users(username, hash, role) VALUES (?, ?, ?)", username, hashed, role)
+        rows = db.execute("SELECT * FROM users WHERE username = ?",username)
+        user_id = rows[0]["id"]
+
+        #patient registration
+        if role == "patient":
+            name = request.form.get("pname")
+            birth = request.form.get("birth")
+            occupation = request.form.get("occupation")
+
+            db.execute("INSERT INTO patients(username, user_id, name, birth, occupation) VALUES (?, ?, ?, ?, ?)", username, user_id, name, birth, occupation)
+
+        #doctor registration
+        elif role == "doctor":
+            name = request.form.get("dname")
+            menumber = request.form.get("menumber")
+            specialty = request.form.get("specialty")
+
+            if (specialty not in SPECIALTY):
+                return apology("Enter a valid specialty")
+
+            db.execute("INSERT INTO doctors(username, user_id, name, menumber, speciality) VALUES (?, ?, ?, ?, ?)", username, user_id, name, menumber, specialty)
+        else:
+            return apology("Something wrong is not right")
+
 
         #remember the session
         session["user_id"] = user_id
 
         return redirect("/")
         # TODO: Add the user's entry into the database
-    return render_template("register.html")
+    return render_template("register.html", specialty=SPECIALTY)
+
+#MAP SECTION OF CODE
+
+ROUTE = db.execute("SELECT latitude, longitude, name, speciality FROM doctors")
+
+# Mapbox driving direction API call
+ROUTE_URL = "https://api.mapbox.com/directions/v5/mapbox/driving/{0}.json?access_token={1}&overview=full&geometries=geojson"
+
+def create_route_url():
+    # Create a string with all the geo coordinates
+    lat_longs = ";".join(["{0},{1}".format(point["longitude"], point["latitude"]) for point in ROUTE])
+    # Create a url with the geo coordinates and access token
+    url = ROUTE_URL.format(lat_longs, 'pk.eyJ1IjoiZGF2aXBibCIsImEiOiJja2c5d2tncWIwMWZ3MnpxdTZ3YW00dnhjIn0.LSI8x6EqhOlp-sfnjCyqOw')
+    return url
+
+def get_route_data():
+    # Get the route url
+    route_url = create_route_url()
+    # Perform a GET request to the route API
+    result = requests.get(route_url)
+    # Convert the return value to JSON
+    data = result.json()
+
+    # Create a geo json object from the routing data
+    geometry = data["routes"][0]["geometry"]
+    route_data = Feature(geometry = geometry, properties = {})
+
+    return route_data
+
+def create_stop_locations_details():
+    stop_locations = []
+    for location in ROUTE:
+        # Create a geojson object for stop location
+        point = Point([location['longitude'], location['latitude']])
+        properties = {
+            'title': location['name'],
+            'icon': 'campsite',
+            'marker-color': '#3bb2d0',
+            'marker-symbol': len(stop_locations) + 1
+        }
+        feature = Feature(geometry = point, properties = properties)
+        stop_locations.append(feature)
+    return stop_locations
 
 
-@app.route("/sell", methods=["GET", "POST"])
+@app.route('/find-doctors',methods=['GET','POST'])
 @login_required
-def sell():
-    """Sell shares of stock"""
+def my_maps():
 
-    """
-    username = db.execute("SELECT username FROM users WHERE id = ?", session["user_id"])[0]["username"]
-    portfolio = db.execute("SELECT DISTINCT symbol FROM history WHERE username = ?", username)
-    count = db.execute("SELECT COUNT(DISTINCT symbol) FROM history WHERE username = ?", username)[0]["COUNT(DISTINCT symbol)"]
-    symbols = [count, ""]
-    for i in range(count):
-        symbols[i] = lookup(portfolio[i]["symbol"])
-    symbols = list(symbols)
+    mapbox_access_token = 'pk.eyJ1IjoiZGF2aXBibCIsImEiOiJja2c5d2tncWIwMWZ3MnpxdTZ3YW00dnhjIn0.LSI8x6EqhOlp-sfnjCyqOw'
 
-    if request.method == "POST":
-        symbol = request.form.get("symbol")
-        shares = int(request.form.get("shares"))
-        if symbol == "":
-            return apology("It looks like you didn't insert a symbol. Please insert one.")
-        if shares < 0:
-            return apology("You submitted a not accepted amount of shares")
-        sumShares = db.execute(
-            "SELECT SUM(shares) FROM history WHERE username = ? AND symbol = ? GROUP BY symbol HAVING shares > 0", username, symbol)[0]["SUM(shares)"]
-        if shares > sumShares:
-            return apology("You don't have enough shares to sell")
-        balance = db.execute("SELECT cash FROM users WHERE id = ?", session["user_id"])
-        balance = balance[0]["cash"]
-        value = float(shares * lookup(symbol)["price"])
-        transactionTime = time.strftime('%A %B, %d %Y %H:%M:%S')
-        db.execute("INSERT INTO history(username, shares, symbol, value, time) VALUES (?, ?, ?, ?, ?)",
-                   username, shares, symbol, value, transactionTime)
-        historyId = db.execute("SELECT id FROM history WHERE username = ? AND time = ?", username, transactionTime)
-        historyId = historyId[0]["id"]
-        shares = 0 - shares
-        db.execute("UPDATE history SET shares = ? WHERE id = ?", shares, historyId)
-        newbalance = balance + value
-        db.execute("UPDATE users SET cash = ? WHERE id = ?", newbalance, session["user_id"])
-        shares = 0 - shares
-        result = lookup(symbol)
-        return render_template("selling.html", symbols=symbols, username=username, value=value, transactionTime=transactionTime, shares=shares, result=result, portfolio=portfolio, newbalance=newbalance)
+    route_data = get_route_data()
+    stop_locations = create_stop_locations_details()
 
-    return render_template("sell.html", portfolio=portfolio)
-"""
+    return render_template('find_doctors.html', mapbox_access_token=mapbox_access_token, stop_locations = stop_locations, route_data=route_data)
+
+
+#END OF MAP SECTION
+
+#BEGINNING OF TEST SECTION FOR DEPENDENT SELECTION
+
+@app.route('/dependent', methods=['POST', 'GET'])
+def dependent():
+    cars = {'Chevrolet':['Volt','Malibu','Camry'],'Toyota':['Yaris','Corolla'],'KIA':['Cerato','Rio']}
+    # look for data from form POST (won't be present when we are invoked with GET initially)
+    selected_car = request.form['car_vendor'] if 'car_vendor' in request.form else None
+    if not selected_car or selected_car not in cars:
+        selected_car = None
+        selected_model = None
+    else:
+        selected_model = request.form['car_model'] if 'car_model' in request.form else None
+        # This is an alternative to unselecting the car model whenever a new car vendor is selected.
+        # Instead, we just check whether the selected model belongs to the selected car vendor or not:
+        if selected_model and selected_model not in cars[selected_car]:
+            selected_model = None
+    # Use a string template for demonstration purposes:
+    return render_template_string("""
+<!DOCTYPE html>
+<html>
+<head>
+<title>Flask Demo</title>
+<meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0, minimum-scale=1.0">
+</head>
+<body>
+<h2>Select Car</h2>
+<form name="f" method="post">
+  <table>
+    <tr>
+      <th>Make</th>
+    <th>Model</th>
+    </tr>
+    <tr>
+      <td>
+        <select name="car_vendor" id="car_vendor" onchange="document.f.submit();">
+{% if not selected_car %}
+          <option value=''>-- Select a Make --</option>
+{% endif %}
+{% for car in cars.keys() %}
+          <option value="{{ car }}" {% if car == selected_car %}selected="selected"{% endif %}>{{ car }}</option>
+{% endfor %}
+        </select>
+      </td>
+      <td>
+{% if selected_car %}
+        <select name="car_model" id="car_model" onchange="document.f.submit();">
+  {% if not selected_model %}
+          <option value=''>-- Select a Model --</option>
+  {% endif %}
+  {% for model in cars[selected_car] %}
+          <option value="{{ model }}" {% if model == selected_model %}selected="selected"{% endif %}>{{ model }}</option>
+  {% endfor %}
+        </select>
+{% endif %}
+      </td>
+    </tr>
+  </table>
+</form>
+
+{% if selected_car and selected_model %}
+<p style="color: red;">Both make and model have been selected: {{ selected_car }} and {{ selected_model }}.</p>
+{% endif %}
+</body>
+</html>
+""", cars=cars, selected_car=selected_car, selected_model=selected_model)
+
+
+#END OF DEPENDENT SELECTION
 
 def errorhandler(e):
     """Handle error"""
