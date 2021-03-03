@@ -126,6 +126,10 @@ def appointment():
     # look for data from form POST (won't be present when we are invoked with GET initially)
     #selected_spe = request.form['car_vendor'] if 'car_vendor' in request.form else None
     if request.method == "POST":
+        role = db.execute("SELECT * FROM users WHERE id = ?", session["user_id"])[0]["role"]
+        if (role == "doctor"):
+            return apology("It is only possible to register an appointment with a patient account")
+        patientDb = db.execute("SELECT id, user_id, name, occupation FROM patients WHERE user_id = ?", session["user_id"])[0]
         date = request.form.get("schedule")
         hour = request.form.get("appt")
         specialization = request.form.get("specialty")
@@ -294,6 +298,22 @@ def register():
     return render_template("register.html", specialty=SPECIALTY)
 
 #MAP SECTION OF CODE
+
+@app.route("/map-register", methods=["GET", "POST"])
+@login_required
+def map_register():
+    mapbox_access_token = 'pk.eyJ1IjoiZGF2aXBibCIsImEiOiJja2c5d2tncWIwMWZ3MnpxdTZ3YW00dnhjIn0.LSI8x6EqhOlp-sfnjCyqOw'
+    role = db.execute("SELECT role FROM users WHERE id = ?", session["user_id"])[0]["role"]
+    if (role=="doctor"):
+        if request.method == "POST":
+            newLongitude = request.form.get("Longitude")
+            newLatitude = request.form.get("Latitude")
+            db.execute("UPDATE doctors SET longitude = ?, latitude = ? WHERE user_id = ?", newLongitude, newLatitude, session["user_id"])
+            return redirect("/")
+        else:
+            return render_template("map-register.html", mapbox_access_token=mapbox_access_token)
+    else:
+        return apology("It looks like this section is not meant for you!")
 
 ROUTE = db.execute("SELECT latitude, longitude, name, speciality FROM doctors")
 
