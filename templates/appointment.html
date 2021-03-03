@@ -6,20 +6,114 @@
 
 {% block main %}
 
-<script type="text/javascript">
-    function update()
-    {
-        var select = document.getElementById('selected');
-        var option = select.options[select.selectedIndex];
-        document.getElementById('selected').value = option.text;
-        var selectDoctor = document.getElementById('selected-doctor');
-        var optionDoctor = selectDoctor.options[selectDoctor.selectedIndex];
-        document.getElementById('selected-doctor').value = optionDoctor.text;
-    }
-    update();
-</script>
-<h2>{{ message }}</h2>
+    <script type="text/javascript">
+        /*
+        function update()
+        {
+            var select = document.getElementById('selected');
+            var option = select.options[select.selectedIndex];
+            document.getElementById('selected').value = option.text;
+            var selectDoctor = document.getElementById('selected-doctor');
+            var optionDoctor = selectDoctor.options[selectDoctor.selectedIndex];
+            document.getElementById('selected-doctor').value = optionDoctor.text;
+        }
+        function getspe()
+        {
+            var spe = {{spe | safe}}
+            console.log(spe);
+        
+            for(var key in spe) 
+            {
+                var h = document.getElementById("spe");
+                h.insertAdjacentHTML("afterend", "<option value='"+key+"' id='selected'>"+key+"</option>");           
+                
+            }
+        }
+        
+        function getdoctors()
+        {
+            var spe = {{spe | safe}}
+            var h = document.getElementById("spe")
+            var arrayLength = spe[h.value].length;
+            for (var i = 0; i < arrayLength; i++) {
+                console.log(spe[h.value][i]);
+                var doc = spe[h.value][i]
+                h.insertAdjacentHTML("afterend", "<option value="+doc+" id='selected'>"+doc+"</option>");
+
+            }
+            
+        }
+    
+        document.addEventListener('DOMContentLoaded',getspe);
+
+        function getspe()
+        {
+            var test = ['hello', 'World']
+            var spe = {{SPECIALTY | safe }};
+            console.log(spe);
+            var arrayLength = spe.length;
+            for (var i = 0; i < arrayLength; i++) {
+                console.log(spe[i]);
+                //h.insertAdjacentHTML("afterend", "<option id='selected'>"+spe[i]+"</option>");
+                document.getElementById('spe').innerHTML+= "<p>"+spe[i]+"</p>"
+                //Do something
+            }
+            
+            document.addEventListener('DOMContentLoaded',getspe);
+        */
+        function getdocs()
+        {
+            var selected_spe = document.getElementById("specialty").value;
+            var docs = {{doctorDb | safe }};
+            console.log(docs);
+            var arrayLength = docs.length;
+            
+            document.getElementById("inject").innerHTML = "<option disabled selected value =''>Select a doctor</option>";
+            for (var i = 0; i < arrayLength; i++) {
+            
+                console.log(docs[i]);
+                //h.insertAdjacentHTML("afterend", "<option id='selected'>"+spe[i]+"</option>");
+                if (docs[i]["speciality"] == selected_spe)
+                {
+                    document.getElementById("inject").innerHTML += "<option value='"+ docs[i]["id"] +"'>"+ docs[i]["name"] + "</option>";
+                }
+                
+                //Do something
+            
+            }
+            
+        }
+    
+    </script>
+
+
+
 <form action="/appointment" method="post">
+
+    <div class="form-group">
+        <label for="specialty">Choose a specialty:</label>
+        <select id="specialty" onchange = 'getdocs()' name="specialty">
+            <option disabled selected value="" >Select a specialty</option>
+            {% for spe in SPECIALTY %}
+          <option value="{{ spe }}">{{ spe }}</option>
+            {% endfor %}
+            
+        </select>
+    </div>
+    
+    
+    <div class="form-group">
+        <label for="doctor-name">Choose a doctor:</label>
+        <select id="inject" class="form-control" name="doctor" >
+            
+            <option disabled selected value ="">Select a doctor</option>
+            
+            <div id="inject">
+                <option disabled selected value ="">Select a specialty</option>
+            </div>
+
+        </select>
+    </div>
     <div class="form-group">
         <label for="schedule">Select a day</label>
         <input type="date" name="schedule">
@@ -28,30 +122,6 @@
     <div class="form-group">
         <label for="appt">Choose a time for your meeting:</label>
         <input type="time" id="appt" name="appt" min="00:00" max="23:59" required>
-    </div>
-
-    <div class="form-group">
-        <label for="specialties">Choose a specialty:</label>
-        <select id="specialties" name="specialty" onchange="update()">
-            <option disabled selected value="" >Select a specialty</option>
-            {% for row in specialty %}
-                <option value="{{ row }}" id="selected">{{ row }}</option>
-            {% endfor %}
-        </select>
-    </div>
-
-    {{ selectedSpecialty }}
-
-    <div class="form-group">
-        <label for="doctor-name">Choose a doctor:</label>
-        <select class="form-control" name="doctor" onchange="update()">
-            <option disabled selected value ="">Select a doctor</option>
-            {% for row in doctorDb %}
-                {% if row.specialty == selectedSpecialty %}
-                <option value = "{{ row.id }}" id="selected-doctor">{{ row.name }}</option>
-                {% endif %}
-            {% endfor %}
-        </select>
     </div>
 
     <div class="form-group">

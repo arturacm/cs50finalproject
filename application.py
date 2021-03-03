@@ -120,8 +120,11 @@ def login():
 @app.route("/appointment", methods=["GET", "POST"])
 @login_required
 def appointment():
-    doctorDb = db.execute("SELECT id, name, speciality FROM doctors")
-    patientDb = db.execute("SELECT id, user_id, name, occupation FROM patients WHERE user_id = ?", session["user_id"])[0]
+    
+    #if request.method == "POST":
+
+    # look for data from form POST (won't be present when we are invoked with GET initially)
+    #selected_spe = request.form['car_vendor'] if 'car_vendor' in request.form else None
     if request.method == "POST":
         date = request.form.get("schedule")
         hour = request.form.get("appt")
@@ -129,18 +132,46 @@ def appointment():
         doctor = request.form.get("doctor")
         patientLog = request.form.get("log")
         stringDate = date + " " + hour
-        #TO-DO: If schedule is already booked, suggest other appointments.
-        #checkVacancy = db.execute("SELECT TIME FROM appointments WHERE doctor_id = ?", doctor)
-        #for row in checkVacancy["TIME"]:
-        #    if (stringDate - row > -1 or stringDate - row < 1):
-        #        print(stringDate - row)
+        
         stringDate = datetime.strptime(stringDate, "%Y-%m-%d %H:%M")
 
         db.execute("INSERT INTO appointments(patient_id, doctor_id, type_appointment, TIME, patient_log) VALUES (?, ?, ?, ?, ?)", patientDb["id"], doctor, specialization, stringDate, patientLog)
         message="Appointment successfully scheduled"
-        return render_template("appointment.html", message=message)
+        
+        return redirect("/")
+
     else:
-         return render_template("appointment.html", specialty=SPECIALTY, doctorDb=doctorDb)
+        doctorDb = db.execute("SELECT id, name, speciality FROM doctors")
+        """
+        spe = {}
+        for rowSpecialty in SPECIALTY:
+            testName = db.execute("SELECT name FROM doctors WHERE speciality = ?", rowSpecialty)
+            count = db.execute("SELECT COUNT(name) FROM doctors WHERE speciality = ?", rowSpecialty)[0]["COUNT(name)"]
+            if count != 0:
+                names = [count, ""]
+                for i in range(count):
+                    names[i] = testName[i]["name"]
+            else:
+                names = []
+            spe.update({rowSpecialty : names})
+            """
+        
+        #return render_template("appointment.html", spe=spe)
+        return render_template("appointment.html", doctorDb=doctorDb, SPECIALTY=SPECIALTY)
+         
+"""
+    if not selected_spe or selected_spe not in spe:
+        selected_car = None
+        selected_model = None
+    else:
+        selected_model = request.form['car_model'] if 'car_model' in request.form else None
+        # This is an alternative to unselecting the car model whenever a new car vendor is selected.
+        # Instead, we just check whether the selected model belongs to the selected car vendor or not:
+        if selected_model and selected_model not in spe[selected_car]:
+            selected_model = None
+    # Use a string template for demonstration purposes:
+    return render_template("appointment.html", spe=spe, selected_spe =selected_spe , selected_model=selected_model)
+"""
 
 @app.route("/change", methods=["GET", "POST"])
 @login_required
@@ -321,7 +352,7 @@ def my_maps():
 #END OF MAP SECTION
 
 #BEGINNING OF TEST SECTION FOR DEPENDENT SELECTION
-
+"""
 @app.route('/dependent', methods=['POST', 'GET'])
 def dependent():
     #cars = {'Chevrolet':['Volt','Malibu','Camry'],'Toyota':['Yaris','Corolla'],'KIA':['Cerato','Rio']}
@@ -349,7 +380,7 @@ def dependent():
         if selected_model and selected_model not in cars[selected_car]:
             selected_model = None
     # Use a string template for demonstration purposes:
-    return render_template_string("""
+    return render_template_string("
 <!DOCTYPE html>
 <html>
 <head>
@@ -396,8 +427,8 @@ def dependent():
 {% endif %}
 </body>
 </html>
-""", cars=cars, selected_car=selected_car, selected_model=selected_model)
-
+", cars=cars, selected_car=selected_car, selected_model=selected_model)
+"""
 
 #END OF DEPENDENT SELECTION
 
