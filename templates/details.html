@@ -34,27 +34,30 @@
                 {% endfor %}
             {% endif %}
             {% if role == "doctor" %}
-                <thead>
-                    <tr>
-                        <th>Patient Name</th>
-                        <th>Consultation Type</th>
-                        <th>Description</th>
-                        <th>Date</th>
-                        <th>Details</th>
-    
-                    </tr>
-                </thead>
+            {% for row in appointments %}
                 <tbody>
-                    {% for row in appointments %}
-                        <tr>
-                            <td>{{ row.name }}</td>
-                            <td>{{ row.type_appointment }}</td>
-                            <td>{{ row.patient_log }}</td>
-                            <td>{{ row.TIME }}</td>
-                        </tr>
-                    {% endfor %}
-                {% endif %}
-            </tbody>
+                    <tr>
+                        <th><td>Patient Name</td></th>
+                        <td>{{ row.patients_name }}</td>
+                    </tr>
+                    <tr>
+                        <th><td>Doctor Specialty</td></th>
+                        <td>{{ row.type_appointment }}</td>
+                    </tr>
+                    <tr>
+                        <th><td>Description submitted</td></th>
+                        <td>{{ row.patient_log }}</td>
+                    </tr>
+                    <tr>
+                        <th><td>Doctor's response</td></th>
+                        <td>{{ row.doctor_log }}</td>
+                    </tr>
+                        <th><td>Date</td></th>
+                        <td>{{ row.TIME }}</td>
+                    </tr>
+                </tbody>
+            {% endfor %}
+            {% endif %}
         </table>
     </div>
 {% endblock %}

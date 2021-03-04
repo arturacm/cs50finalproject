@@ -50,7 +50,7 @@
                 <tbody>
                     {% for row in appointments %}
                         <tr>
-                            <td>{{ row.name }}</td>
+                            <td>{{ row.patients_name }}</td>
                             <td>{{ row.type_appointment }}</td>
                             <td>{{ row.patient_log }}</td>
                             <td>{{ row.TIME }}</td>
@@ -62,7 +62,7 @@
                         </tr>
                     {% endfor %}
                 {% endif %}
-            </tbody>
+                </tbody>
         </table>
     </div>
 {% endblock %}

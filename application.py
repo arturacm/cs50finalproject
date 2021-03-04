@@ -67,7 +67,7 @@ def index():
         appointments = db.execute("SELECT appointments.id AS appointments_id, doctors.id AS doctors_id, * FROM appointments JOIN doctors ON doctors_id = appointments.doctor_id WHERE patient_id = ? AND TIME >= datetime('now') ORDER BY TIME DESC", patientDb["id"])
     elif (role == "doctor"):
         doctorDb = db.execute("SELECT * FROM doctors WHERE user_id = ?", session["user_id"])[0]
-        appointments = db.execute("SELECT appointments.id AS appointments_id, doctors.id AS doctors_id, patients.id AS patients_id, * FROM appointments LEFT JOIN doctors ON appointments.doctor_id = doctors_id LEFT JOIN patients ON appointments.patient_id = patients_id WHERE doctor_id = ? AND TIME >= datetime('now') ORDER BY TIME DESC", doctorDb["id"])
+        appointments = db.execute("SELECT appointments.id AS appointments_id, doctors.id AS doctors_id, patients.id AS patients_id, patients.name AS patients_name, * FROM appointments LEFT JOIN doctors ON appointments.doctor_id = doctors_id LEFT JOIN patients ON appointments.patient_id = patients_id WHERE doctor_id = ? AND TIME >= datetime('now') ORDER BY TIME DESC", doctorDb["id"])
     return render_template("index.html", role=role, appointments=appointments)
 
 
@@ -81,7 +81,7 @@ def history():
         appointments = db.execute("SELECT appointments.id AS appointments_id, doctors.id AS doctors_id, * FROM appointments JOIN doctors ON doctors_id = appointments.doctor_id WHERE patient_id = ? AND TIME < datetime('now') ORDER BY TIME DESC", patientDb["id"])
     elif (role == "doctor"):
         doctorDb = db.execute("SELECT * FROM doctors WHERE user_id = ?", session["user_id"])[0]
-        appointments = db.execute("SELECT appointments.id AS appointments_id, doctors.id AS doctors_id, patients.id AS patients_id, * FROM appointments LEFT JOIN doctors ON appointments.doctor_id = doctors_id LEFT JOIN patients ON appointments.patient_id = patients_id WHERE doctor_id = ? AND TIME < datetime('now') ORDER BY TIME DESC", doctorDb["id"])
+        appointments = db.execute("SELECT appointments.id AS appointments_id, doctors.id AS doctors_id, patients.id AS patients_id, patients.name AS patients_name, * FROM appointments LEFT JOIN doctors ON appointments.doctor_id = doctors_id LEFT JOIN patients ON appointments.patient_id = patients_id WHERE doctor_id = ? AND TIME < datetime('now') ORDER BY TIME DESC", doctorDb["id"])
     return render_template("history.html", role=role, appointments=appointments)
 
 
@@ -323,7 +323,7 @@ def register():
 def details():
    role = db.execute("SELECT * FROM users WHERE id = ?", session["user_id"])[0]["role"]
    apptId = request.form.get("appointment")
-   appointments = db.execute("SELECT appointments.id AS appointments_id, doctors.id AS doctors_id, * FROM appointments JOIN doctors ON doctors_id = appointments.doctor_id WHERE appointments_id = ?", apptId)
+   appointments = db.execute("SELECT appointments.id AS appointments_id, doctors.id AS doctors_id, patients.id AS patients_id, patients.name AS patients_name, * FROM appointments LEFT JOIN doctors ON doctors_id = appointments.doctor_id LEFT JOIN patients ON patients_id = appointments.patient_id WHERE appointments_id = ?", apptId)
    return render_template("details.html", appointments=appointments, role=role)
 
 #MAP SECTION OF CODE

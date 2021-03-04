@@ -50,13 +50,13 @@
                 <tbody>
                     {% for row in appointments %}
                         <tr>
-                            <td>{{ row.name }}</td>
+                            <td>{{ row.patients_name }}</td>
                             <td>{{ row.type_appointment }}</td>
                             <td>{{ row.patient_log }}</td>
                             <th>{{ row.TIME}}</th>
                             <td>
                                 <form action="/details" method="post">
-                                    <button class="btn btn-primary" name="appointment" value="{{ row.id }}" type="submit">Details</button>
+                                    <button class="btn btn-primary" name="appointment" value="{{ row.appointments_id }}" type="submit">Details</button>
                                 </form>
                             </td>
                         </tr>
