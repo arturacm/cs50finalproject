@@ -106,21 +106,14 @@
                     'fill-extrusion-opacity': .6
                 }
             }, labelLayerId);
-
+            */
             map.addLayer({
                 "id": "route",
-                "type": "line",
-                "source": "route",
-                "layout": {
-                    "line-join": "round",
-                    "line-cap": "round"
-                },
-                "paint": {
-                    "line-color": "#007cbf",
-                    "line-width": 2
-                }
+                "type": "symbol",
+                "source": "route"
             });
-            */
+
+            
              // Add this to end of function
             var stop_locations = {{ stop_locations|safe }}
             stop_locations.forEach(function(marker) {
@@ -131,6 +124,8 @@
 
                 new mapboxgl.Marker(el)
                     .setLngLat(marker.geometry.coordinates)
+                    .setPopup(new mapboxgl.Popup({ offset: 25 }) // add popups
+                    .setHTML('<h3>' + marker.properties.title + '</h3><p>' + marker.properties.specialty + '</p>'))
                     .addTo(map);
             });
         });

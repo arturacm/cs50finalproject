@@ -1,7 +1,7 @@
 {% extends "layout.html" %}
 
 {% block title %}
-    Homepage
+    Details
 {% endblock %}
 
 {% block main %}
@@ -9,31 +9,28 @@
         <h2>You are a {{ role }}</h2>
         <table>
             {% if role == "patient" %}
-                <thead>
-                    <tr>
-                        <th>Doctor Name</th>
-                        <th>Doctor Specialty</th>
-                        <th>Description submitted</th>
-                        <th>Doctor's response</th>
-                        <th>Date</th>
-                        <th>Details</th>
-
-                    </tr>
-                </thead>
-                <tbody>
                 {% for row in appointments %}
+                <tbody>
                     <tr>
+                        <th><td>Doctor Name</td></th>
                         <td>{{ row.name }}</td>
-                        <td>{{ row.type_appointment }}</td>
-                        <td>{{ row.patient_log }}</td>
-                        <td>{{ row.doctor_log }}</td>
-                        <td>{{ row.TIME }}</td>
-                        <td>
-                            <form action="/details" method="post">
-                                <button class="btn btn-primary" name="appointment" value="{{ row.appointments_id }}" type="submit">Details</button>
-                            </form>
-                        </td>
                     </tr>
+                    <tr>
+                        <th><td>Doctor Specialty</td></th>
+                        <td>{{ row.type_appointment }}</td>
+                    </tr>
+                    <tr>
+                        <th><td>Description submitted</td></th>
+                        <td>{{ row.patient_log }}</td>
+                    </tr>
+                    <tr>
+                        <th><td>Doctor's response</td></th>
+                        <td>{{ row.doctor_log }}</td>
+                    </tr>
+                        <th><td>Date</td></th>
+                        <td>{{ row.TIME }}</td>
+                    </tr>
+                </tbody>
                 {% endfor %}
             {% endif %}
             {% if role == "doctor" %}
@@ -54,11 +51,6 @@
                             <td>{{ row.type_appointment }}</td>
                             <td>{{ row.patient_log }}</td>
                             <td>{{ row.TIME }}</td>
-                            <td>
-                                <form action="/details" method="post">
-                                    <button class="btn btn-primary" name="appointment" value="{{ row.id }}" type="submit">Details</button>
-                                </form>
-                            </td>
                         </tr>
                     {% endfor %}
                 {% endif %}
