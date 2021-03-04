@@ -217,7 +217,7 @@ def change():
         db.execute("UPDATE users SET hash = ? WHERE username = ?", hashed, request.form.get("username"))
 
         return redirect("/")
-    return render_template("change.html", role=role)
+    return render_template("change.html")
 
 
 @app.route("/logout")
@@ -324,7 +324,7 @@ def register():
 def details():
    role = db.execute("SELECT * FROM users WHERE id = ?", session["user_id"])[0]["role"]
    apptId = request.form.get("appointment")
-   appointments = db.execute("SELECT appointments.id AS appointments_id, doctors.id AS doctors_id, patients.id AS patients_id, patients.name AS patients_name, * FROM appointments LEFT JOIN doctors ON doctors_id = appointments.doctor_id LEFT JOIN patients ON patients_id = appointments.patient_id WHERE appointments_id = ?", apptId)
+   appointments = db.execute("SELECT appointments.id AS appointments_id, doctors.id AS doctors_id, doctors.name AS doctors_name, patients.id AS patients_id, patients.name AS patients_name, * FROM appointments LEFT JOIN patients ON patients_id = appointments.patient_id LEFT JOIN doctors ON doctors_id = appointments.doctor_id WHERE appointments_id = ?", apptId)
    return render_template("details.html", appointments=appointments, role=role)
 
 #MAP SECTION OF CODE
@@ -392,15 +392,10 @@ def create_stop_locations_details():
 @login_required
 def my_maps():
 
-<<<<<<< HEAD
-    mapbox_access_token = 'pk.eyJ1IjoiZGF2aXBibCIsImEiOiJja2c5d2tncWIwMWZ3MnpxdTZ3YW00dnhjIn0.LSI8x6EqhOlp-sfnjCyqOw'
-    role = db.execute("SELECT role FROM users WHERE id = ?", session["user_id"])[0]["role"]
-=======
->>>>>>> dc817a943c8f342f2ed6d5678ffbb1fe5524d5e9
     route_data = get_route_data()
     stop_locations = create_stop_locations_details()
 
-    return render_template('find_doctors.html', mapbox_access_token=mapbox_access_token, stop_locations = stop_locations, route_data=route_data, role=role)
+    return render_template('find_doctors.html', mapbox_access_token=mapbox_access_token, stop_locations = stop_locations, route_data=route_data)
 
 
 #END OF MAP SECTION
