@@ -9,7 +9,7 @@ from flask_session import Session
 from tempfile import mkdtemp
 from werkzeug.exceptions import default_exceptions, HTTPException, InternalServerError
 from werkzeug.security import check_password_hash, generate_password_hash
-from datetime import datetime
+from datetime import datetime, timedelta
 from geojson import Point, Feature
 
 #from helpers import apology, login_required, lookup, usd
@@ -60,10 +60,10 @@ def index():
     
     if (role == "patient"):
         patientDb = db.execute("SELECT * FROM patients WHERE user_id = ?", session["user_id"])[0]
-        appointments = db.execute("SELECT * FROM appointments JOIN doctors ON doctors.id = appointments.doctor_id WHERE patient_id = ? AND TIME >= datetime('now') ORDER BY TIME DESC", patientDb["id"])
+        appointments = db.execute("SELECT appointments.id AS appointments_id, doctors.id AS doctors_id, * FROM appointments JOIN doctors ON doctors_id = appointments.doctor_id WHERE patient_id = ? AND TIME >= datetime('now') ORDER BY TIME DESC", patientDb["id"])
     elif (role == "doctor"):
         doctorDb = db.execute("SELECT * FROM doctors WHERE user_id = ?", session["user_id"])[0]
-        appointments = db.execute("SELECT * FROM appointments LEFT JOIN doctors ON appointments.doctor_id = doctors.id LEFT JOIN patients ON appointments.patient_id = patients.id WHERE doctor_id = ? AND TIME >= datetime('now') ORDER BY TIME DESC", doctorDb["id"])
+        appointments = db.execute("SELECT appointments.id AS appointments_id, doctors.id AS doctors_id, patients.id AS patients_id, * FROM appointments LEFT JOIN doctors ON appointments.doctor_id = doctors_id LEFT JOIN patients ON appointments.patient_id = patients_id WHERE doctor_id = ? AND TIME >= datetime('now') ORDER BY TIME DESC", doctorDb["id"])
     return render_template("index.html", role=role, appointments=appointments)
 
 
@@ -74,10 +74,10 @@ def history():
     
     if (role == "patient"):
         patientDb = db.execute("SELECT * FROM patients WHERE user_id = ?", session["user_id"])[0]
-        appointments = db.execute("SELECT * FROM appointments JOIN doctors ON doctors.id = appointments.doctor_id WHERE patient_id = ? AND TIME < datetime('now') ORDER BY TIME DESC", patientDb["id"])
+        appointments = db.execute("SELECT appointments.id AS appointments_id, doctors.id AS doctors_id, * FROM appointments JOIN doctors ON doctors_id = appointments.doctor_id WHERE patient_id = ? AND TIME < datetime('now') ORDER BY TIME DESC", patientDb["id"])
     elif (role == "doctor"):
         doctorDb = db.execute("SELECT * FROM doctors WHERE user_id = ?", session["user_id"])[0]
-        appointments = db.execute("SELECT * FROM appointments LEFT JOIN doctors ON appointments.doctor_id = doctors.id LEFT JOIN patients ON appointments.patient_id = patients.id WHERE doctor_id = ? AND TIME < datetime('now') ORDER BY TIME DESC", doctorDb["id"])
+        appointments = db.execute("SELECT appointments.id AS appointments_id, doctors.id AS doctors_id, patients.id AS patients_id, * FROM appointments LEFT JOIN doctors ON appointments.doctor_id = doctors_id LEFT JOIN patients ON appointments.patient_id = patients_id WHERE doctor_id = ? AND TIME < datetime('now') ORDER BY TIME DESC", doctorDb["id"])
     return render_template("history.html", role=role, appointments=appointments)
 
 
@@ -137,7 +137,23 @@ def appointment():
         patientLog = request.form.get("log")
         stringDate = date + " " + hour
         
+        #Check if another appointment is already scheduled
+        count = db.execute("SELECT COUNT(TIME) FROM appointments WHERE doctor_id = ? AND TIME > datetime('now')", doctor)[0]["COUNT(TIME)"]
+        if count > 0:
+            dateCheck = [count, ""]
+            for i in range(count):
+                dateCheck = db.execute("SELECT TIME FROM appointments WHERE doctor_id = ? AND TIME > datetime('now')", doctor)[i]["TIME"]
+                conditionCheck = dateCheck.split(" ")
+                if conditionCheck[0] == date:
+                    time = int(conditionCheck[1].split(":")[0]) * 60 + int(conditionCheck[1].split(":")[1])
+                    if abs(time - (int(hour.split(":")[0]) * 60 + int(hour.split(":")[1]))) < 30:
+                        return apology("This doctor cannot schedule an appointment by this time")
+
+        #Check if time has already passed
         stringDate = datetime.strptime(stringDate, "%Y-%m-%d %H:%M")
+        now = datetime.now()
+        if stringDate < now:
+            return apology("You cannot schedule an appointment for this date and hour")
 
         db.execute("INSERT INTO appointments(patient_id, doctor_id, type_appointment, TIME, patient_log) VALUES (?, ?, ?, ?, ?)", patientDb["id"], doctor, specialization, stringDate, patientLog)
         message="Appointment successfully scheduled"
@@ -297,6 +313,15 @@ def register():
         # TODO: Add the user's entry into the database
     return render_template("register.html", specialty=SPECIALTY)
 
+
+@app.route("/details", methods=["GET", "POST"])
+@login_required
+def details():
+   role = db.execute("SELECT * FROM users WHERE id = ?", session["user_id"])[0]["role"]
+   apptId = request.form.get("appointment")
+   appointments = db.execute("SELECT appointments.id AS appointments_id, doctors.id AS doctors_id, * FROM appointments JOIN doctors ON doctors_id = appointments.doctor_id WHERE appointments_id = ?", apptId)
+   return render_template("details.html", appointments=appointments, role=role)
+
 #MAP SECTION OF CODE
 
 @app.route("/map-register", methods=["GET", "POST"])
@@ -350,7 +375,8 @@ def create_stop_locations_details():
             'title': location['name'],
             'icon': 'campsite',
             'marker-color': '#3bb2d0',
-            'marker-symbol': len(stop_locations) + 1
+            'marker-symbol': len(stop_locations) + 1,
+            'specialty' : location['speciality']
         }
         feature = Feature(geometry = point, properties = properties)
         stop_locations.append(feature)
