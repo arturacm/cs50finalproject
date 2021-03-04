@@ -11,6 +11,8 @@ from werkzeug.exceptions import default_exceptions, HTTPException, InternalServe
 from werkzeug.security import check_password_hash, generate_password_hash
 from datetime import datetime, timedelta
 from geojson import Point, Feature
+from dotenv import load_dotenv
+load_dotenv()
 
 #from helpers import apology, login_required, lookup, usd
 from helpers import apology, login_required, usd
@@ -47,7 +49,9 @@ db = SQL("sqlite:///database.db")
 # Setting accepted Doctors' Specialties
 SPECIALTY = {"Physician", "Pediatrician", "Geriatric medicine", "Allergist", "Dermatologist", "Infectologist", "Ophtalmologist", "Obstetrician", "Gynecologist", "Cardiologist"} 
 
+
 # Make sure API key is set
+mapbox_access_token = os.environ.get("MAPBOX_ACCESS_TOKEN")
 """
 if not os.environ.get("API_KEY"):
    raise RuntimeError("API_KEY not set")
@@ -327,7 +331,6 @@ def details():
 @app.route("/map-register", methods=["GET", "POST"])
 @login_required
 def map_register():
-    mapbox_access_token = 'pk.eyJ1IjoiZGF2aXBibCIsImEiOiJja2c5d2tncWIwMWZ3MnpxdTZ3YW00dnhjIn0.LSI8x6EqhOlp-sfnjCyqOw'
     role = db.execute("SELECT role FROM users WHERE id = ?", session["user_id"])[0]["role"]
     if (role=="doctor"):
         if request.method == "POST":
@@ -349,7 +352,7 @@ def create_route_url():
     # Create a string with all the geo coordinates
     lat_longs = ";".join(["{0},{1}".format(point["longitude"], point["latitude"]) for point in ROUTE])
     # Create a url with the geo coordinates and access token
-    url = ROUTE_URL.format(lat_longs, 'pk.eyJ1IjoiZGF2aXBibCIsImEiOiJja2c5d2tncWIwMWZ3MnpxdTZ3YW00dnhjIn0.LSI8x6EqhOlp-sfnjCyqOw')
+    url = ROUTE_URL.format(lat_longs, mapbox_access_token)
     return url
 
 def get_route_data():
@@ -386,8 +389,6 @@ def create_stop_locations_details():
 @app.route('/find-doctors',methods=['GET','POST'])
 @login_required
 def my_maps():
-
-    mapbox_access_token = 'pk.eyJ1IjoiZGF2aXBibCIsImEiOiJja2c5d2tncWIwMWZ3MnpxdTZ3YW00dnhjIn0.LSI8x6EqhOlp-sfnjCyqOw'
 
     route_data = get_route_data()
     stop_locations = create_stop_locations_details()
