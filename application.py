@@ -114,13 +114,14 @@ def login():
 
     # User reached route via GET (as by clicking a link or via redirect)
     else:
-        return render_template("login.html")
+        role = "patient"
+        return render_template("login.html", role=role)
 
 
 @app.route("/appointment", methods=["GET", "POST"])
 @login_required
 def appointment():
-    
+    role = db.execute("SELECT role FROM users WHERE id = ?", session["user_id"])[0]["role"]
     #if request.method == "POST":
 
     # look for data from form POST (won't be present when we are invoked with GET initially)
@@ -177,7 +178,7 @@ def appointment():
             """
         
         #return render_template("appointment.html", spe=spe)
-        return render_template("appointment.html", doctorDb=doctorDb, SPECIALTY=SPECIALTY)
+        return render_template("appointment.html", doctorDb=doctorDb, SPECIALTY=SPECIALTY, role=role)
          
 """
     if not selected_spe or selected_spe not in spe:
@@ -212,7 +213,7 @@ def change():
         db.execute("UPDATE users SET hash = ? WHERE username = ?", hashed, request.form.get("username"))
 
         return redirect("/")
-    return render_template("change.html")
+    return render_template("change.html", role=role)
 
 
 @app.route("/logout")
@@ -336,7 +337,8 @@ def map_register():
             db.execute("UPDATE doctors SET longitude = ?, latitude = ? WHERE user_id = ?", newLongitude, newLatitude, session["user_id"])
             return redirect("/")
         else:
-            return render_template("map-register.html", mapbox_access_token=mapbox_access_token)
+            role = db.execute("SELECT role FROM users WHERE id = ?", session["user_id"])[0]["role"]
+            return render_template("map-register.html",role=role, mapbox_access_token=mapbox_access_token)
     else:
         return apology("It looks like this section is not meant for you!")
 
@@ -377,7 +379,7 @@ def create_stop_locations_details():
             'marker-color': '#3bb2d0',
             'marker-symbol': len(stop_locations) + 1,
             'specialty' : location['speciality']
-        }
+         }
         feature = Feature(geometry = point, properties = properties)
         stop_locations.append(feature)
     return stop_locations
@@ -388,11 +390,11 @@ def create_stop_locations_details():
 def my_maps():
 
     mapbox_access_token = 'pk.eyJ1IjoiZGF2aXBibCIsImEiOiJja2c5d2tncWIwMWZ3MnpxdTZ3YW00dnhjIn0.LSI8x6EqhOlp-sfnjCyqOw'
-
+    role = db.execute("SELECT role FROM users WHERE id = ?", session["user_id"])[0]["role"]
     route_data = get_route_data()
     stop_locations = create_stop_locations_details()
 
-    return render_template('find_doctors.html', mapbox_access_token=mapbox_access_token, stop_locations = stop_locations, route_data=route_data)
+    return render_template('find_doctors.html', mapbox_access_token=mapbox_access_token, stop_locations = stop_locations, route_data=route_data, role=role)
 
 
 #END OF MAP SECTION
