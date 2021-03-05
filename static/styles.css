@@ -1,10 +1,23 @@
+body {
+    background-color: #EDEBE8;
+}
+
+html {
+    background-color: #EDEBE8;
+}
+ 
+
 nav .navbar-brand
 {
     /* size for brand */
     font-family: "Didot";
-    font-size: xx-large;
+    font-size: xx-large; 
+              
 }
-
+.bg-light 
+{
+    background-color: #DCDAD7;
+}
 /* Colors for brand */
 nav .navbar-brand .blue
 {
@@ -64,12 +77,12 @@ main img
     padding-top: 0.5rem;
     margin: auto;
 }
-
+/*
 .table-data:hover {
     background-color: #f5f5f5;
     transition: color 2s ease-in-out, background-color 0.15s ease-in-out;
 }
-
+*/
 table {
     background-color: transparent;
     margin-bottom: 1rem;
@@ -83,6 +96,17 @@ table td {
 }
 
 tbody tr:nth-of-type(odd) {
-    background-color: rgb(179, 208, 255, 0.3)
+    background-color: #D6CEC1;
 }
 
+.btn-light
+{
+    background-color: #BA9F77;
+    border-color: black ;
+}
+
+.btn-light:hover
+{
+    background-color: #a78859;
+    border-color: white ;
+}
