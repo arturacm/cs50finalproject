@@ -184,23 +184,11 @@ def appointment():
         #return render_template("appointment.html", spe=spe)
         return render_template("appointment.html", doctorDb=doctorDb, SPECIALTY=SPECIALTY, role=role)
          
-"""
-    if not selected_spe or selected_spe not in spe:
-        selected_car = None
-        selected_model = None
-    else:
-        selected_model = request.form['car_model'] if 'car_model' in request.form else None
-        # This is an alternative to unselecting the car model whenever a new car vendor is selected.
-        # Instead, we just check whether the selected model belongs to the selected car vendor or not:
-        if selected_model and selected_model not in spe[selected_car]:
-            selected_model = None
-    # Use a string template for demonstration purposes:
-    return render_template("appointment.html", spe=spe, selected_spe =selected_spe , selected_model=selected_model)
-"""
 
 @app.route("/change", methods=["GET", "POST"])
 @login_required
 def change():
+    role = db.execute("SELECT role FROM users WHERE id = ?", session["user_id"])[0]["role"]
     if request.method == "POST":
         if not request.form.get("username"):
             return apology("must provide username", 403)
@@ -217,7 +205,7 @@ def change():
         db.execute("UPDATE users SET hash = ? WHERE username = ?", hashed, request.form.get("username"))
 
         return redirect("/")
-    return render_template("change.html")
+    return render_template("change.html",role=role)
 
 
 @app.route("/logout")
@@ -391,11 +379,11 @@ def create_stop_locations_details():
 @app.route('/find-doctors',methods=['GET','POST'])
 @login_required
 def my_maps():
-
+    role = db.execute("SELECT role FROM users WHERE id = ?", session["user_id"])[0]["role"]
     route_data = get_route_data()
     stop_locations = create_stop_locations_details()
 
-    return render_template('find_doctors.html', mapbox_access_token=mapbox_access_token, stop_locations = stop_locations, route_data=route_data)
+    return render_template('find_doctors.html', mapbox_access_token=mapbox_access_token, stop_locations = stop_locations, route_data=route_data, role=role)
 
 
 #END OF MAP SECTION

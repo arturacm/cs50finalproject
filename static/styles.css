@@ -1,6 +1,7 @@
 nav .navbar-brand
 {
     /* size for brand */
+    font-family: "Didot";
     font-size: xx-large;
 }
 
