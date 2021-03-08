@@ -11,11 +11,13 @@ from werkzeug.exceptions import default_exceptions, HTTPException, InternalServe
 from werkzeug.security import check_password_hash, generate_password_hash
 from datetime import datetime, timedelta
 from geojson import Point, Feature
-from dotenv import load_dotenv
-load_dotenv()
+#from dotenv import load_dotenv
+
+#using dotenv for storing the API key on a different file
+#load_dotenv()
 
 #from helpers import apology, login_required, lookup, usd
-from helpers import apology, login_required, usd
+from helpers import apology, login_required
 
 
 # Configure application
@@ -34,9 +36,6 @@ def after_request(response):
     return response
 
 
-# Custom filter
-app.jinja_env.filters["usd"] = usd
-
 # Configure session to use filesystem (instead of signed cookies)
 app.config["SESSION_FILE_DIR"] = mkdtemp()
 app.config["SESSION_PERMANENT"] = False
@@ -51,17 +50,20 @@ SPECIALTY = {"Physician", "Pediatrician", "Geriatric medicine", "Allergist", "De
 
 
 # Make sure API key is set
-mapbox_access_token = os.environ.get("MAPBOX_ACCESS_TOKEN")
+#mapbox_access_token = os.environ.get("MAPBOX_ACCESS_TOKEN")
+mapbox_access_token ='pk.eyJ1IjoiZGF2aXBibCIsImEiOiJja2c5d2tncWIwMWZ3MnpxdTZ3YW00dnhjIn0.LSI8x6EqhOlp-sfnjCyqOw'
 """
-if not os.environ.get("API_KEY"):
+if not os.environ.get("mapbox_access_token"):
    raise RuntimeError("API_KEY not set")
 """
 
+#index page
 @app.route("/")
 @login_required
 def index():
     role = db.execute("SELECT * FROM users WHERE id = ?", session["user_id"])[0]["role"]
     
+    #Query the next appointments for the main screen
     if (role == "patient"):
         patientDb = db.execute("SELECT * FROM patients WHERE user_id = ?", session["user_id"])[0]
         appointments = db.execute("SELECT appointments.id AS appointments_id, doctors.id AS doctors_id, * FROM appointments JOIN doctors ON doctors_id = appointments.doctor_id WHERE patient_id = ? AND TIME >= datetime('now') ORDER BY TIME DESC", patientDb["id"])
@@ -76,6 +78,7 @@ def index():
 def history():
     role = db.execute("SELECT * FROM users WHERE id = ?", session["user_id"])[0]["role"]
     
+    #Query the past appointments for the main screen
     if (role == "patient"):
         patientDb = db.execute("SELECT * FROM patients WHERE user_id = ?", session["user_id"])[0]
         appointments = db.execute("SELECT appointments.id AS appointments_id, doctors.id AS doctors_id, * FROM appointments JOIN doctors ON doctors_id = appointments.doctor_id WHERE patient_id = ? AND TIME < datetime('now') ORDER BY TIME DESC", patientDb["id"])
@@ -126,12 +129,10 @@ def login():
 @login_required
 def appointment():
     role = db.execute("SELECT role FROM users WHERE id = ?", session["user_id"])[0]["role"]
-    #if request.method == "POST":
-
-    # look for data from form POST (won't be present when we are invoked with GET initially)
-    #selected_spe = request.form['car_vendor'] if 'car_vendor' in request.form else None
+    
     if request.method == "POST":
         role = db.execute("SELECT * FROM users WHERE id = ?", session["user_id"])[0]["role"]
+        
         if (role == "doctor"):
             return apology("It is only possible to register an appointment with a patient account")
         patientDb = db.execute("SELECT id, user_id, name, occupation FROM patients WHERE user_id = ?", session["user_id"])[0]
@@ -167,24 +168,10 @@ def appointment():
 
     else:
         doctorDb = db.execute("SELECT id, name, speciality FROM doctors")
-        """
-        spe = {}
-        for rowSpecialty in SPECIALTY:
-            testName = db.execute("SELECT name FROM doctors WHERE speciality = ?", rowSpecialty)
-            count = db.execute("SELECT COUNT(name) FROM doctors WHERE speciality = ?", rowSpecialty)[0]["COUNT(name)"]
-            if count != 0:
-                names = [count, ""]
-                for i in range(count):
-                    names[i] = testName[i]["name"]
-            else:
-                names = []
-            spe.update({rowSpecialty : names})
-            """
-        
-        #return render_template("appointment.html", spe=spe)
+     
         return render_template("appointment.html", doctorDb=doctorDb, SPECIALTY=SPECIALTY, role=role)
          
-
+#password change page
 @app.route("/change", methods=["GET", "POST"])
 @login_required
 def change():
@@ -310,12 +297,24 @@ def register():
 @app.route("/details", methods=["GET", "POST"])
 @login_required
 def details():
-   role = db.execute("SELECT * FROM users WHERE id = ?", session["user_id"])[0]["role"]
-   apptId = request.form.get("appointment")
-   appointments = db.execute("SELECT appointments.id AS appointments_id, doctors.id AS doctors_id, doctors.name AS doctors_name, patients.id AS patients_id, patients.name AS patients_name, * FROM appointments LEFT JOIN patients ON patients_id = appointments.patient_id LEFT JOIN doctors ON doctors_id = appointments.doctor_id WHERE appointments_id = ?", apptId)
-   return render_template("details.html", appointments=appointments, role=role)
+    role = db.execute("SELECT * FROM users WHERE id = ?", session["user_id"])[0]["role"]
+    apptId = request.form.get("appointment")
+    appointments = db.execute("SELECT appointments.id AS appointments_id, doctors.id AS doctors_id, doctors.name AS doctors_name, patients.id AS patients_id, patients.name AS patients_name, * FROM appointments LEFT JOIN patients ON patients_id = appointments.patient_id LEFT JOIN doctors ON doctors_id = appointments.doctor_id WHERE appointments_id = ?", apptId)
+    return render_template("details.html", appointments=appointments, role=role)
 
-#MAP SECTION OF CODE
+#MAP SECTION OF THE CODE
+@app.route("/updatedoclog", methods=["GET", "POST"])
+@login_required
+def updatedoclog():
+    drlog = request.form.get("doclog")
+    appointment_id = request.form.get("appointment_id")
+    print(appointment_id)
+    print(drlog)
+    
+    db.execute("UPDATE appointments SET doctor_log = ? WHERE id = ?", drlog, appointment_id)
+
+
+    return redirect('/')
 
 @app.route("/map-register", methods=["GET", "POST"])
 @login_required
@@ -375,7 +374,7 @@ def create_stop_locations_details():
         stop_locations.append(feature)
     return stop_locations
 
-
+#map page that users the Mapbox API
 @app.route('/find-doctors',methods=['GET','POST'])
 @login_required
 def my_maps():
@@ -387,87 +386,6 @@ def my_maps():
 
 
 #END OF MAP SECTION
-
-#BEGINNING OF TEST SECTION FOR DEPENDENT SELECTION
-"""
-@app.route('/dependent', methods=['POST', 'GET'])
-def dependent():
-    #cars = {'Chevrolet':['Volt','Malibu','Camry'],'Toyota':['Yaris','Corolla'],'KIA':['Cerato','Rio']}
-    cars = {}
-    for rowSpecialty in SPECIALTY:
-        testName = db.execute("SELECT name FROM doctors WHERE speciality = ?", rowSpecialty)
-        count = db.execute("SELECT COUNT(name) FROM doctors WHERE speciality = ?", rowSpecialty)[0]["COUNT(name)"]
-        if count != 0:
-            names = [count, ""]
-            for i in range(count):
-                names[i] = testName[i]["name"]
-        else:
-            names = []
-            
-        cars.update({rowSpecialty : names})
-    # look for data from form POST (won't be present when we are invoked with GET initially)
-    selected_car = request.form['car_vendor'] if 'car_vendor' in request.form else None
-    if not selected_car or selected_car not in cars:
-        selected_car = None
-        selected_model = None
-    else:
-        selected_model = request.form['car_model'] if 'car_model' in request.form else None
-        # This is an alternative to unselecting the car model whenever a new car vendor is selected.
-        # Instead, we just check whether the selected model belongs to the selected car vendor or not:
-        if selected_model and selected_model not in cars[selected_car]:
-            selected_model = None
-    # Use a string template for demonstration purposes:
-    return render_template_string("
-<!DOCTYPE html>
-<html>
-<head>
-<title>Flask Demo</title>
-<meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0, minimum-scale=1.0">
-</head>
-<body>
-<h2>Select Car</h2>
-<form name="f" method="post">
-  <table>
-    <tr>
-      <th>Make</th>
-    <th>Model</th>
-    </tr>
-    <tr>
-      <td>
-        <select name="car_vendor" id="car_vendor" onchange="document.f.submit();">
-{% if not selected_car %}
-          <option value=''>-- Select a Make --</option>
-{% endif %}
-{% for car in cars.keys() %}
-          <option value="{{ car }}" {% if car == selected_car %}selected="selected"{% endif %}>{{ car }}</option>
-{% endfor %}
-        </select>
-      </td>
-      <td>
-{% if selected_car %}
-        <select name="car_model" id="car_model" onchange="document.f.submit();">
-  {% if not selected_model %}
-          <option value=''>-- Select a Model --</option>
-  {% endif %}
-  {% for model in cars[selected_car] %}
-          <option value="{{ model }}" {% if model == selected_model %}selected="selected"{% endif %}>{{ model }}</option>
-  {% endfor %}
-        </select>
-{% endif %}
-      </td>
-    </tr>
-  </table>
-</form>
-
-{% if selected_car and selected_model %}
-<p style="color: red;">Both make and model have been selected: {{ selected_car }} and {{ selected_model }}.</p>
-{% endif %}
-</body>
-</html>
-", cars=cars, selected_car=selected_car, selected_model=selected_model)
-"""
-
-#END OF DEPENDENT SELECTION
 
 def errorhandler(e):
     """Handle error"""

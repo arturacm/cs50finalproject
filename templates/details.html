@@ -25,6 +25,7 @@
                     </tr>
                     <tr>
                         <th><td>Doctor's response</td></th>
+                         <!-- anchor trigger modal -->
                         <td>{{ row.doctor_log }}</td>
                     </tr>
                         <th><td>Date</td></th>
@@ -50,7 +51,38 @@
                     </tr>
                     <tr>
                         <th><td>Doctor's response</td></th>
-                        <td>{{ row.doctor_log }}</td>
+                        <td><a data-toggle="modal" data-target="#exampleModal">{{ row.doctor_log }}</a>
+                            <!-- Modal -->
+                            
+                            <div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                                <div class="modal-dialog" role="document">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title" id="exampleModalLabel">Edit response</h5>
+                                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                            <span aria-hidden="true">&times;</span>
+                                            </button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <form action="/updatedoclog" method="post">
+                                            
+                                            <div class="form-group">
+                                                <p>
+                                                    <label for="message-text" class="col-form-label">New response:</label>
+                                                </p>
+                                                    
+                                                <textarea class="form-control" style="width: 100%" id="message-text" name="doclog"></textarea>
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                                        <button type="submit" name = "appointment_id" value = "{{ row.appointments_id }}" class="btn btn-light">Submit changes</button>
+                                            </form>
+                                    </div>
+                                    </div>
+                                </div>
+                                </div>
+                        </td>
                     </tr>
                         <th><td>Date</td></th>
                         <td>{{ row.TIME }}</td>
@@ -60,4 +92,9 @@
             {% endif %}
         </table>
     </div>
+        {% if role == "doctor" %}
+        <button type="button" class="btn btn-light" data-toggle="modal" data-target="#exampleModal">
+        Update appointment details
+      </button>
+      {% endif %}
 {% endblock %}

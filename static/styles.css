@@ -110,3 +110,7 @@ tbody tr:nth-of-type(odd) {
     background-color: #a78859;
     border-color: white ;
 }
+a:hover
+{
+font-weight:400;
+}
