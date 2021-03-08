@@ -126,9 +126,9 @@ If interested in contributing for this open source project, it can be done so by
 Distributed under the MIT License.
 
 # Contact
-Artur Moreira - LinkedIn Profile - email
+Artur Moreira - LinkedIn: www.linkedin.com/in/artur-moreira - email: arturacm@gmail.com
 
-Davi Leal - LinkedIn Profile - davipbl@gmail.com
+Davi Leal - LinkedIn Profile - email: davipbl@gmail.com
 
 Project Link: https://github.com/arturacm/cs50finalproject
 
