@@ -11,10 +11,10 @@ from werkzeug.exceptions import default_exceptions, HTTPException, InternalServe
 from werkzeug.security import check_password_hash, generate_password_hash
 from datetime import datetime, timedelta
 from geojson import Point, Feature
-#from dotenv import load_dotenv
+from dotenv import load_dotenv
 
 #using dotenv for storing the API key on a different file
-#load_dotenv()
+load_dotenv()
 
 #from helpers import apology, login_required, lookup, usd
 from helpers import apology, login_required
