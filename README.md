@@ -2,7 +2,7 @@
 #### Video Demo:  https://www.youtube.com/watch?v=--DrB_q7Y28
 
 # Table of Contents
-- About The Project
+- [About The Project](#About-The-Project)
   - Built With
 - Getting Started
 - Prerequisites
