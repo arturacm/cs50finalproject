@@ -1,5 +1,5 @@
 # DocLog
-#### Video Demo:  <URL HERE>
+#### Video Demo:  https://www.youtube.com/watch?v=--DrB_q7Y28
 
 # Table of Contents
 - About The Project
@@ -57,6 +57,11 @@ If you followed the configuration correctly, you should be able to open to your 
 
 # Project’s schemes
 Our current project scheme can be seen as:
+
+<p align="center">
+  <img width="15%" height="100%" src="https://i.imgur.com/7XHQeSo.png">
+</p>
+
 | File Name           | Description                                                                                                           |
 |:--------------------|:----------------------------------------------------------------------------------------------------------------------|
 | /static             | _Folder for organizing the front-end styles, CSS and Map Marker._                                                     |
@@ -84,12 +89,19 @@ Our current project scheme can be seen as:
 
 # Usage
 
-Once opened, you may create an account at register and pick a role as a patient or a doctor. 
+Once opened, you may create an account at register and pick a role as a patient or a doctor.
+
+<p align="center">
+  <img width="50%" height="100%" src="https://i.imgur.com/hbgIfoP.png">
+</p>
 
 After selecting the account’s role, the form will act accordingly and provide you with the necessary camps to provide for the SQL database.
 
 The index webpage will show you your next validated appointments and upon registration should show a page which looks like the image below.
 
+<p align="center">
+  <img width="100%" height="100%" src="https://i.imgur.com/yq2j49G.png">
+</p>
 
 From there, you have, as a patient, the following fields:
 - Appointment
@@ -100,10 +112,23 @@ From there, you have, as a patient, the following fields:
 
 The appointment webpage will show you a simple form to submit an appointment and should look like the image below.
 
+<p align="center">
+  <img width="75%" height="100%" src="https://user-images.githubusercontent.com/73298622/110504981-793af700-80dc-11eb-90cb-36328cfcdf2c.png">
+</p>
+
+
 History webpage works similarly to the index webpage and shows you appointments which already happened.
+
+<p align="center">
+  <img width="75%" height="100%" src="https://user-images.githubusercontent.com/73298622/110505307-c9b25480-80dc-11eb-88d1-10c567005134.png">
+</p>
+
 
 Lastly, the other main functionality is a map which shows you the current list of doctors subscribed to the database.
 
+<p align="center">
+  <img width="50%" height="50%" src="https://media1.giphy.com/media/KES6iXUlz3Grt0zb0N/giphy.gif">
+</p>
 
 # Roadmap
 If checked thoroughly, it can be perceived that the website is still in its development stages and it can be improved greatly by a new stylization with newer graphs, images and fonts. This should be an ever-increasing aspect of this website if opted to continue improving on it.
@@ -126,11 +151,11 @@ If interested in contributing for this open source project, it can be done so by
 Distributed under the MIT License.
 
 # Contact
-Artur Moreira - LinkedIn: www.linkedin.com/in/artur-moreira - email: arturacm@gmail.com
+Artur Moreira - [LinkedIn](www.linkedin.com/in/artur-moreira) - email: arturacm@gmail.com
 
-Davi Leal - LinkedIn Profile - email: davipbl@gmail.com
+Davi Leal - [LinkedIn](https://www.linkedin.com/in/davi-pinheiro-barros-leal-b62474121/) - email: davipbl@gmail.com
 
-Project Link: https://github.com/arturacm/cs50finalproject
+[Project Link](https://github.com/arturacm/cs50finalproject)
 
 # Acknowledgements
 - OpenEMS
