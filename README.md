@@ -3,17 +3,17 @@
 
 # Table of Contents
 - [About The Project](#About-The-Project)
-  - Built With
-- Getting Started
-- Prerequisites
-- Installation
-- Project’s schemes
-- Usage
-- Roadmap
-- Contributing
-- License
-- Contact
-- Acknowledgements
+  - [Built With](##Built-With)
+- [Getting Started](#Getting-Started)
+- [Prerequisites](#Prerequisites)
+- [Installation](#Installation)
+- [Project’s schemes](#Projects-schemes)
+- [Usage](#Usage)
+- [Roadmap](#Roadmap)
+- [Contributing](#Contributing)
+- [License](#License)
+- [Contact](#Contact)
+- [Acknowledgements](#Acknowledgements)
 
 
 # About The Project
